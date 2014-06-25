@@ -100,6 +100,11 @@ void WalletFrame::gotoReceiveCoinsPage()
     walletStack->gotoReceiveCoinsPage();
 }
 
+void WalletFrame::gotoVoteCoinsPage()
+{
+    walletStack->gotoVoteCoinsPage();
+}
+
 void WalletFrame::gotoSendCoinsPage(QString addr)
 {
     walletStack->gotoSendCoinsPage(addr);

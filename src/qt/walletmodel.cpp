@@ -162,10 +162,10 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         total += rcp.amount;
     }
 
-    if(recipients.size() > setAddress.size())
+    /*if(recipients.size() > setAddress.size())
     {
         return DuplicateAddress;
-    }
+    }*/
 
     int64 nBalance = getBalance(coinControl);
 
@@ -178,6 +178,12 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     {
         return SendCoinsReturn(AmountWithFeeExceedsBalance, nTransactionFee);
     }
+
+    if((total + nTransactionFee) == nBalance)
+    {
+        return SendCoinsReturn(SatoshiForChangeAddressRequired, 1);
+    }
+
 
     {
         LOCK2(cs_main, wallet->cs_wallet);
@@ -195,7 +201,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         CReserveKey keyChange(wallet);
         int64 nFeeRequired = 0;
         std::string strFailReason;
-        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason, coinControl);
+        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason, coinControl, true);
 
         if(!fCreated)
         {

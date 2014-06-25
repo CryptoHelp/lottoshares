@@ -49,7 +49,8 @@ public:
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
-        Aborted
+        Aborted,
+        SatoshiForChangeAddressRequired
     };
 
     enum EncryptionStatus
