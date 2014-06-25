@@ -5,6 +5,7 @@
 #define BITCOIN_CHECKPOINT_H
 
 #include <map>
+#include "uint256.h"
 
 class uint256;
 class CBlockIndex;
@@ -24,6 +25,10 @@ namespace Checkpoints
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
 
     double GuessVerificationProgress(CBlockIndex *pindex);
+
+    //Add new checkpoint, effective immediately
+    void addCheckpoint(int64 theTime, int64 theHeight, uint256 hashBestChain, bool createQueue);
+    void loadCheckpoints();
 }
 
 #endif

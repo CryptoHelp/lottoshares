@@ -10,6 +10,10 @@
 #include "main.h"
 #include "uint256.h"
 
+using namespace std;
+using namespace boost;
+#include <boost/algorithm/string.hpp>
+
 namespace Checkpoints
 {
     typedef std::map<int, uint256> MapCheckpoints;
@@ -35,9 +39,9 @@ namespace Checkpoints
     // + Contains no strange transactions
     static MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
-        (  22904, uint256("0x7ec149bc57fbb1c388e76be2f9b8bec21164ca34655299e58d4f7346fd27746a"))
-        (  40000, uint256("0x30c1e17632fab4d0523774b0d07b28698ca4a7c032a7aa0f225b35dea534d4aa"))
-	;
+        (  0, hashGenesisBlock)
+    ;
+
     static const CCheckpointData data = {
         &mapCheckpoints,
         1390036132, // * UNIX timestamp of last checkpoint block
@@ -136,4 +140,47 @@ namespace Checkpoints
         }
         return NULL;
     }
+
+    void addCheckpoint(int64 theTime, int64 theHeight, uint256 theHashBestChain, bool createQueue){
+        if(mapCheckpoints[theHeight]==0){
+            ofstream myfile;
+            myfile.open ((GetDataDir() / "checkpoints.txt").string().c_str(), ios::app);
+            myfile << theHeight << "," << theHashBestChain.GetHex() << "," << theTime <<"\n";
+            myfile.close();
+
+            mapCheckpoints[theHeight]=theHashBestChain;
+
+            printf("checkpoint added - decoded %llu, %llu, %s\n", theTime, theHeight, theHashBestChain.GetHex().c_str());
+
+            if(createQueue){
+                //Write to file - create a queue of files
+                boost::filesystem::path path = GetDataDir() / "broadcast" / strprintf("%08d.txt", theHeight);
+                boost::filesystem::create_directories(path.parent_path());
+                ofstream broadcastOutput;
+                broadcastOutput.open(path.string().c_str());
+                broadcastOutput << theHeight << ":" << theHashBestChain.ToString() << ":" << theTime;
+                broadcastOutput.close();
+            }
+
+        }
+    }
+
+    void loadCheckpoints(){
+        //load from disk - locally made
+        ifstream myfile2 ((GetDataDir() / "checkpoints.txt").string().c_str());
+        if (myfile2.is_open()){
+            std::string line;
+            while ( myfile2.good() ){
+                std::getline (myfile2,line);
+                std::vector<std::string> strs;
+                boost::split(strs, line, boost::is_any_of(","));
+                if(strs.size()==3){
+                    mapCheckpoints[atoi(strs[0])]=uint256(strs[1]);
+                }else{
+                    printf("hashlookup.txt - %s line parse failed\n",line.c_str());
+                }
+            }
+        }
+    }
+
 }
