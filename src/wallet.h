@@ -18,6 +18,9 @@
 #include "util.h"
 #include "walletdb.h"
 
+// Settings
+extern bool bSpendZeroConfChange;
+
 class CAccountingEntry;
 class CWalletTx;
 class CReserveKey;
@@ -180,7 +183,7 @@ public:
     int64 GetUnconfirmedBalance() const;
     int64 GetImmatureBalance() const;
     bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend,
-                           CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl=NULL);
+                           CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl=NULL, bool changeTransactionLast=false);
     bool CreateTransaction(CScript scriptPubKey, int64 nValue,
                            CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl=NULL);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);

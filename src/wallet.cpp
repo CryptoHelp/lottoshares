@@ -13,6 +13,8 @@
 
 using namespace std;
 
+// Settings
+bool bSpendZeroConfChange = true;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1157,14 +1159,14 @@ bool CWallet::SelectCoins(int64 nTargetValue, set<pair<const CWalletTx*,unsigned
 
     return (SelectCoinsMinConf(nTargetValue, 1, 6, vCoins, setCoinsRet, nValueRet) ||
             SelectCoinsMinConf(nTargetValue, 1, 1, vCoins, setCoinsRet, nValueRet) ||
-            SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet));
+            (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet)));
 }
 
 
 
 
 bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, bool changeTransactionLast)
 {
     int64 nValue = 0;
     BOOST_FOREACH (const PAIRTYPE(CScript, int64)& s, vecSend)
@@ -1273,9 +1275,15 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
                         nFeeRet += nChange;
                         reservekey.ReturnKey();
                     }
+                    else if(changeTransactionLast){
+                        // Insert change at end:
+                        vector<CTxOut>::iterator position = wtxNew.vout.begin()+wtxNew.vout.size();
+                        wtxNew.vout.insert(position, newTxOut);
+
+                    }
                     else
                     {
-                        // Insert change txn at random position:
+                        // Insert change at end:
                         vector<CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size()+1);
                         wtxNew.vout.insert(position, newTxOut);
                     }
