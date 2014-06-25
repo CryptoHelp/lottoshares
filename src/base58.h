@@ -272,9 +272,9 @@ class CBitcoinAddress : public CBase58Data
 public:
     enum
     {
-        PUBKEY_ADDRESS = 68, // UnitedScryptCoin addresses start with U
+        PUBKEY_ADDRESS = 48, // LottoShares addresses start with L
         SCRIPT_ADDRESS = 5,
-        PUBKEY_ADDRESS_TEST = 65, // testnet keys start with T
+        PUBKEY_ADDRESS_TEST = 111,
         SCRIPT_ADDRESS_TEST = 196,
     };
 
