@@ -3,6 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "checkpoints.h"
 #include "txdb.h"
 #include "walletdb.h"
 #include "bitcoinrpc.h"
@@ -10,6 +11,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "lottoshares.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -179,12 +181,12 @@ bool AppInit(int argc, char* argv[])
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
             // First part of help message is specific to bitcoind / RPC client
-            std::string strUsage = _("UnitedScryptCoin version") + " " + FormatFullVersion() + "\n\n" +
+            std::string strUsage = _("LottoShares version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  unitedscryptcoind [options]                     " + "\n" +
-                  "  unitedscryptcoind [options] <command> [params]  " + _("Send command to -server or unitedscryptcoind") + "\n" +
-                  "  unitedscryptcoind [options] help                " + _("List commands") + "\n" +
-                  "  unitedscryptcoind [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  lottosharesd [options]                     " + "\n" +
+                  "  lottosharesd [options] <command> [params]  " + _("Send command to -server or lottosharesd") + "\n" +
+                  "  lottosharesd [options] help                " + _("List commands") + "\n" +
+                  "  lottosharesd [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessage();
 
@@ -194,7 +196,7 @@ bool AppInit(int argc, char* argv[])
 
         // Command-line RPC
         for (int i = 1; i < argc; i++)
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "unitedscryptcoin:"))
+            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "lottoshares:"))
                 fCommandLine = true;
 
         if (fCommandLine)
@@ -297,8 +299,8 @@ std::string HelpMessage()
 {
     string strUsage = _("Options:") + "\n" +
         "  -?                     " + _("This help message") + "\n" +
-        "  -conf=<file>           " + _("Specify configuration file (default: unitedscryptcoin.conf)") + "\n" +
-        "  -pid=<file>            " + _("Specify pid file (default: unitedscryptcoind.pid)") + "\n" +
+        "  -conf=<file>           " + _("Specify configuration file (default: lottoshares.conf)") + "\n" +
+        "  -pid=<file>            " + _("Specify pid file (default: lottosharesd.pid)") + "\n" +
         "  -gen                   " + _("Generate coins (default: 0)") + "\n" +
         "  -datadir=<dir>         " + _("Specify data directory") + "\n" +
         "  -dbcache=<n>           " + _("Set database cache size in megabytes (default: 25)") + "\n" +
@@ -307,7 +309,7 @@ std::string HelpMessage()
         "  -socks=<n>             " + _("Select the version of socks proxy to use (4-5, default: 5)") + "\n" +
         "  -tor=<ip:port>         " + _("Use proxy to reach tor hidden services (default: same as -proxy)") + "\n"
         "  -dns                   " + _("Allow DNS lookups for -addnode, -seednode and -connect") + "\n" +
-        "  -port=<port>           " + _("Listen for connections on <port> (default: 23328 or testnet: 33328)") + "\n" +
+        "  -port=<port>           " + _("Listen for connections on <port> (default: 6042 or testnet: 36042)") + "\n" +
         "  -maxconnections=<n>    " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
         "  -addnode=<ip>          " + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
         "  -connect=<ip>          " + _("Connect only to the specified node(s)") + "\n" +
@@ -375,7 +377,7 @@ std::string HelpMessage()
         "  -blockmaxsize=<n>      "   + _("Set maximum block size in bytes (default: 250000)") + "\n" +
         "  -blockprioritysize=<n> "   + _("Set maximum size of high-priority/low-fee transactions in bytes (default: 27000)") + "\n" +
 
-        "\n" + _("SSL options: (see the UnitedScryptCoin Wiki for SSL setup instructions)") + "\n" +
+        "\n" + _("SSL options: (see the LottoShares Wiki for SSL setup instructions)") + "\n" +
         "  -rpcssl                                  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n" +
         "  -rpcsslcertificatechainfile=<file.cert>  " + _("Server certificate file (default: server.cert)") + "\n" +
         "  -rpcsslprivatekeyfile=<file.pem>         " + _("Server private key (default: server.pem)") + "\n" +
@@ -633,6 +635,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (!ParseMoney(mapArgs["-mininput"], nMinimumInputValue))
             return InitError(strprintf(_("Invalid amount for -mininput=<amount>: '%s'"), mapArgs["-mininput"].c_str()));
     }
+    bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
@@ -644,12 +647,12 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (file) fclose(file);
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
-        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. UnitedScryptCoin is probably already running."), strDataDir.c_str()));
+        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. LottoShares is probably already running."), strDataDir.c_str()));
 
     if (GetBoolArg("-shrinkdebugfile", !fDebug))
         ShrinkDebugFile();
     printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    printf("UnitedScryptCoin version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
+    printf("LottoShares version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
     printf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
     if (!fLogTimestamps)
         printf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
@@ -659,7 +662,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     std::ostringstream strErrors;
 
     if (fDaemon)
-        fprintf(stdout, "UnitedScryptCoin server starting\n");
+        fprintf(stdout, "LottoShares server starting\n");
 
     if (nScriptCheckThreads) {
         printf("Using %u threads for script verification\n", nScriptCheckThreads);
@@ -821,6 +824,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 7: load block chain
 
+    Checkpoints::loadCheckpoints();
+
     fReindex = GetBoolArg("-reindex");
 
     // Upgrading to 0.8; hard-link the old blknnnn.dat files into /blocks/
@@ -907,7 +912,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
-                if (!VerifyDB(GetArg("-checklevel", 3),
+                if (!VerifyDB(GetArg("-checklevel", 2),
                               GetArg( "-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
                     break;
@@ -1000,10 +1005,10 @@ bool AppInit2(boost::thread_group& threadGroup)
                 InitWarning(msg);
             }
             else if (nLoadWalletRet == DB_TOO_NEW)
-                strErrors << _("Error loading wallet.dat: Wallet requires newer version of UnitedScryptCoin") << "\n";
+                strErrors << _("Error loading wallet.dat: Wallet requires newer version of LottoShares") << "\n";
             else if (nLoadWalletRet == DB_NEED_REWRITE)
             {
-                strErrors << _("Wallet needed to be rewritten: restart UnitedScryptCoin to complete") << "\n";
+                strErrors << _("Wallet needed to be rewritten: restart LottoShares to complete") << "\n";
                 printf("%s", strErrors.str().c_str());
                 return InitError(strErrors.str());
             }
@@ -1084,7 +1089,8 @@ bool AppInit2(boost::thread_group& threadGroup)
         BOOST_FOREACH(string strFile, mapMultiArgs["-loadblock"])
             vImportFiles.push_back(strFile);
     }
-    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
+    ThreadImport(vImportFiles);
+    //threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
 
     // ********************************************************* Step 10: load peers
 
@@ -1139,6 +1145,11 @@ bool AppInit2(boost::thread_group& threadGroup)
 
         // Run a thread to flush wallet periodically
         threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
+
+        if(GetBoolArg("-broadcastdraws")){
+            //Broadcast Winning Lottery Numbers
+            boost::thread t(broadcastDraw); // thread runs free
+        }
     }
 
     return !fRequestShutdown;
