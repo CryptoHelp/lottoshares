@@ -1,4 +1,4 @@
-Name UnitedScryptCoin
+Name LottoShares
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
@@ -6,11 +6,11 @@ SetCompressor /SOLID lzma
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
 !define VERSION 0.8.6.2
-!define COMPANY "UnitedScryptCoin project"
-!define URL http://www.litecoin.org/
+!define COMPANY "LottoShares project"
+!define URL http://www.lottoshares.org/
 
 # MUI Symbol Definitions
-!define MUI_ICON "../share/pixmaps/unitedscryptcoin.ico"
+!define MUI_ICON "../share/pixmaps/lottoshares.ico"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard-usc.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
@@ -19,8 +19,8 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
-!define MUI_STARTMENUPAGE_DEFAULTFOLDER UnitedScryptCoin
-!define MUI_FINISHPAGE_RUN $INSTDIR\unitedscryptcoin-qt.exe
+!define MUI_STARTMENUPAGE_DEFAULTFOLDER LottoShares
+!define MUI_FINISHPAGE_RUN $INSTDIR\lottoshares-qt.exe
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard-usc.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
@@ -45,14 +45,14 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile unitedscryptcoin-0.8.6.2-win32-setup.exe
-InstallDir $PROGRAMFILES\UnitedScryptCoin
+OutFile lottoshares-0.8.6.2-win32-setup.exe
+InstallDir $PROGRAMFILES\LottoShares
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
 VIProductVersion 0.8.6.2
-VIAddVersionKey ProductName UnitedScryptCoin
+VIAddVersionKey ProductName LottoShares
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
 VIAddVersionKey CompanyWebsite "${URL}"
@@ -66,18 +66,18 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File ../release/unitedscryptcoin-qt.exe
+    File ../release/lottoshares-qt.exe
     File /oname=COPYING.txt ../COPYING
     File /oname=readme.txt ../doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File ../src/unitedscryptcoind.exe
+    File ../src/lottoshares.exe
     SetOutPath $INSTDIR\src
     File /r /x *.exe /x *.o ../src\*.*
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 
     # Remove old wxwidgets-based-bitcoin executable and locales:
-    Delete /REBOOTOK $INSTDIR\unitedscryptcoin.exe
+    Delete /REBOOTOK $INSTDIR\lottoshares.exe
     RMDir /r /REBOOTOK $INSTDIR\locale
 SectionEnd
 
@@ -87,8 +87,8 @@ Section -post SEC0001
     WriteUninstaller $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\UnitedScryptCoin.lnk" $INSTDIR\unitedscryptcoin-qt.exe
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall UnitedScryptCoin.lnk" $INSTDIR\uninstall.exe
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\LottoShares.lnk" $INSTDIR\lottoshares-qt.exe
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall LottoShares.lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "${VERSION}"
@@ -98,10 +98,10 @@ Section -post SEC0001
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" UninstallString $INSTDIR\uninstall.exe
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
-    WriteRegStr HKCR "unitedscryptcoin" "URL Protocol" ""
-    WriteRegStr HKCR "unitedscryptcoin" "" "URL:UnitedScryptCoin"
-    WriteRegStr HKCR "unitedscryptcoin\DefaultIcon" "" $INSTDIR\unitedscryptcoin-qt.exe
-    WriteRegStr HKCR "unitedscryptcoin\shell\open\command" "" '"$INSTDIR\unitedscryptcoin-qt.exe" "%1"'
+    WriteRegStr HKCR "lottoshares" "URL Protocol" ""
+    WriteRegStr HKCR "lottoshares" "" "URL:LottoShares"
+    WriteRegStr HKCR "lottoshares\DefaultIcon" "" $INSTDIR\lottoshares-qt.exe
+    WriteRegStr HKCR "lottoshares\shell\open\command" "" '"$INSTDIR\lottoshares-qt.exe" "%1"'
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -119,7 +119,7 @@ done${UNSECTION_ID}:
 
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
-    Delete /REBOOTOK $INSTDIR\unitedscryptcoin-qt.exe
+    Delete /REBOOTOK $INSTDIR\lottoshares-qt.exe
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
@@ -129,8 +129,8 @@ SectionEnd
 
 Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall UnitedScryptCoin.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\UnitedScryptCoin.lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall LottoShares.lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\LottoShares.lnk"
     Delete /REBOOTOK "$SMSTARTUP\Litecoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
@@ -139,7 +139,7 @@ Section -un.post UNSEC0001
     DeleteRegValue HKCU "${REGKEY}" Path
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
-    DeleteRegKey HKCR "unitedscryptocin"
+    DeleteRegKey HKCR "lottoshares"
     RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
     RmDir /REBOOTOK $INSTDIR
     Push $R0
