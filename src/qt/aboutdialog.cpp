@@ -21,7 +21,9 @@ AboutDialog::AboutDialog(QWidget *parent) :
                tr("Copyright") + QString(" &copy; ") +
                tr("2011-%1 The Litecoin developers").arg(ABOUTDIALOG_COPYRIGHT_YEAR) + QString("<br>") +
                tr("Copyright") + QString(" &copy; ") +
-               tr("2013 The UnitedScryptCoin developers"));
+               tr("2013 The UnitedScryptCoin developers") +
+                tr("Copyright") + QString(" &copy; ") +
+                tr("2014 The LottoShares developers"));
 }
 
 void AboutDialog::setModel(ClientModel *model)
