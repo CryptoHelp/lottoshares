@@ -15,6 +15,8 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
+class VoteCoinsDialog;
+
 class SignVerifyMessageDialog;
 class Notificator;
 class RPCConsole;
@@ -67,6 +69,7 @@ public:
     QAction * getAddressBookAction() { return addressBookAction; }
     QAction * getReceiveCoinsAction() { return receiveCoinsAction; }
     QAction * getSendCoinsAction() { return sendCoinsAction; }
+    QAction * getVoteCoinsAction() { return voteCoinsAction; }
 
 protected:
     void changeEvent(QEvent *e);
@@ -90,6 +93,7 @@ private:
     QAction *historyAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
+    QAction *voteCoinsAction;
     QAction *addressBookAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
@@ -171,6 +175,7 @@ private slots:
     void gotoAddressBookPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
+    void gotoVoteCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
 
