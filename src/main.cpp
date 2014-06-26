@@ -2992,7 +2992,7 @@ bool InitBlockIndex() {
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
         assert(block.hashMerkleRoot == merklerootGenesisBlock);
-        block.print();
+        //block.print(); //It's too big!
         assert(hash == hashGenesisBlock);
 
         // Start new block file

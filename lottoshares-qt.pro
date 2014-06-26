@@ -25,8 +25,8 @@ win32 {
 	BOOST_LIB_PATH=C:\deps\boost_1_54_0\stage\lib
 	BDB_INCLUDE_PATH=C:\deps\db-4.8.30.NC\build_unix
 	BDB_LIB_PATH=C:\deps\db-4.8.30.NC\build_unix
-	OPENSSL_INCLUDE_PATH=C:\deps\openssl-1.0.1e\include
-	OPENSSL_LIB_PATH=C:\deps\openssl-1.0.1e
+	OPENSSL_INCLUDE_PATH=C:\deps\openssl-1.0.1h\include
+	OPENSSL_LIB_PATH=C:\deps\openssl-1.0.1h
 	MINIUPNPC_LIB_PATH=C:\deps\miniupnpc
 	MINIUPNPC_INCLUDE_PATH=C:\deps
 	
