@@ -27,7 +27,7 @@
 using namespace std;
 using namespace boost;
 
-static const int MAX_OUTBOUND_CONNECTIONS = 8;
+static int MAX_OUTBOUND_CONNECTIONS = 8;
 
 bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
 
@@ -70,6 +70,12 @@ vector<std::string> vAddedNodes;
 CCriticalSection cs_vAddedNodes;
 
 static CSemaphore *semOutbound = NULL;
+
+bool churnNode=false;
+void setChurnMode(){
+    churnNode=true;
+    MAX_OUTBOUND_CONNECTIONS = 50;
+}
 
 void AddOneShot(string strDest)
 {
@@ -1048,6 +1054,10 @@ void ThreadSocketHandler()
                 else if (GetTime() - pnode->nLastRecv > 90*60)
                 {
                     printf("socket inactivity timeout\n");
+                    pnode->fDisconnect = true;
+                }
+                else if (churnNode && (pnode->fInbound==true && GetTime() - pnode->nTimeConnected > 600)){
+                    //If set to churn this is an inbound connection, and has been connected for more than 10 minutes, disconnect it to make room for other new nodes.
                     pnode->fDisconnect = true;
                 }
             }
