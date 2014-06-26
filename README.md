@@ -1,3 +1,5 @@
+Currenty undergoing testing period. Blockchain due for reset July 8th 2014
+
 LottoShares integration/staging tree
 ================================
 
@@ -17,11 +19,13 @@ It features
  - Built in lottery game, 6 of 42
  - Merge-mined with Scrypt based coins - Litcoin, Dogecoin etc.
  - Sharedrops to Bitcoin, Dogecoin, Memorycoin, ProtoShares, AngelShares holders
+ - Dark Gravity Wave Difficult Adjustment
+ - Custom block subsidy inversely related to difficulty.  
  
 The rest is the same as Litecoin.
 
 More details,
-https://bitsharestalk.org/index.php?board=59.0
+https://bitsharestalk.org/index.php?topic=4691.0
 
 License
 -------
