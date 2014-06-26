@@ -1146,10 +1146,6 @@ bool AppInit2(boost::thread_group& threadGroup)
         // Run a thread to flush wallet periodically
         threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
 
-        if(GetBoolArg("-broadcastdraws")){
-            //Broadcast Winning Lottery Numbers
-            boost::thread t(broadcastDraw); // thread runs free
-        }
     }
 
     return !fRequestShutdown;
