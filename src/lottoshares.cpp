@@ -379,7 +379,7 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
             vtx[0].vout[vtx[0].vout.size()-1].nValue = it->second;
             feesFromPayout=feesFromPayout+it->second;
         }
-        feesFromPayout=feesFromPayout/1000;
+        //feesFromPayout=feesFromPayout/1000;
         printf("1 Fees From Payout - Calculated - %llu\n",feesFromPayout);
 
         return true;
@@ -388,7 +388,7 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
         for (std::map<string, int64>::iterator it=payoutRequirements.begin(); it!=payoutRequirements.end(); ++it){
             feesFromPayout=feesFromPayout+it->second;
         }
-        feesFromPayout=feesFromPayout/1000;
+        //feesFromPayout=feesFromPayout/1000;
         //printf("2 Fees From Payout - Calculated - %llu\n",feesFromPayout);
 
         //Check if payout outputs are present in coinbase transaction

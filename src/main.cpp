@@ -1812,6 +1812,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         return state.DoS(100, error("ConnectBlock() : coinbase not making payouts correctly.\n"));
     }
     nFees=nFees+feesFromPayout;
+    nFees=nFees+feesFromPayout/1000;
 
     //1% commission
     nFees=nFees+calculateTicketFees(vtx);
@@ -4614,7 +4615,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         //This adds the required payouts if the block includes a payout transaction
         checkForPayouts(pblock->vtx,feesFromPayout,true);
 
-        nFees=nFees+feesFromPayout;
+        nFees=nFees+feesFromPayout/1000;
 
         nFees=nFees+calculateTicketFees(pblock->vtx);
 
