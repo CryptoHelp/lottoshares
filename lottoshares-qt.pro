@@ -19,18 +19,22 @@ CONFIG += thread
 #    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
 #    BDB_LIB_PATH, OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
 
-win32 {
-	BOOST_LIB_SUFFIX=-mgw46-mt-sd-1_54
-	BOOST_INCLUDE_PATH=C:\deps\boost_1_54_0
-	BOOST_LIB_PATH=C:\deps\boost_1_54_0\stage\lib
-	BDB_INCLUDE_PATH=C:\deps\db-4.8.30.NC\build_unix
-	BDB_LIB_PATH=C:\deps\db-4.8.30.NC\build_unix
-	OPENSSL_INCLUDE_PATH=C:\deps\openssl-1.0.1h\include
-	OPENSSL_LIB_PATH=C:\deps\openssl-1.0.1h
-	MINIUPNPC_LIB_PATH=C:\deps\miniupnpc
-	MINIUPNPC_INCLUDE_PATH=C:\deps
-	
-}
+# Use command line:
+#   qmake bitshares-pts.pro RELEASE=1 USE_UPNP=1 -config release QMAKE_LFLAGS+="-static-libgcc -static-libstdc++" BOOST_INCLUDE_PATH=C:/MinGW/msys/1.0/local/include BOOST_LIB_PATH=C:/MinGW/msys/1.0/local/lib BOOST_LIB_SUFFIX=-mgw46-mt-s-1_54
+#   make -f Makefile.Release
+#
+#win32 {
+#	BOOST_LIB_SUFFIX=-mgw46-mt-sd-1_54
+#	BOOST_INCLUDE_PATH=C:\deps\boost_1_54_0
+#	BOOST_LIB_PATH=C:\deps\boost_1_54_0\stage\lib
+#	BDB_INCLUDE_PATH=C:\deps\db-4.8.30.NC\build_unix
+#	BDB_LIB_PATH=C:\deps\db-4.8.30.NC\build_unix
+#	OPENSSL_INCLUDE_PATH=C:\deps\openssl-1.0.1h\include
+#	OPENSSL_LIB_PATH=C:\deps\openssl-1.0.1h
+#	MINIUPNPC_LIB_PATH=C:\deps\miniupnpc
+#	MINIUPNPC_INCLUDE_PATH=C:\deps
+#	
+#}
 
 OBJECTS_DIR = build
 MOC_DIR = build
@@ -125,14 +129,14 @@ LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a
         QMAKE_RANLIB = $$replace(QMAKE_STRIP, strip, ranlib)
     }
     LIBS += -lshlwapi
-    #genleveldb.commands = cd $$PWD/src/leveldb && CC=$$QMAKE_CC CXX=$$QMAKE_CXX TARGET_OS=OS_WINDOWS_CROSSCOMPILE $(MAKE) OPT=\"$$QMAKE_CXXFLAGS $$QMAKE_CXXFLAGS_RELEASE\" libleveldb.a libmemenv.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libleveldb.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libmemenv.a
+    genleveldb.commands = cd $$PWD/src/leveldb && CC=$$QMAKE_CC CXX=$$QMAKE_CXX TARGET_OS=OS_WINDOWS_CROSSCOMPILE $(MAKE) OPT=\"$$QMAKE_CXXFLAGS $$QMAKE_CXXFLAGS_RELEASE\" libleveldb.a libmemenv.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libleveldb.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libmemenv.a
 }
-genleveldb.target = $$PWD/src/leveldb/libleveldb.a
+genleveldb.target = src/leveldb/libleveldb.a
 genleveldb.depends = FORCE
-PRE_TARGETDEPS += $$PWD/src/leveldb/libleveldb.a
+PRE_TARGETDEPS += src/leveldb/libleveldb.a
 QMAKE_EXTRA_TARGETS += genleveldb
 # Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
-QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; cd $$PWD/src/leveldb ; $(MAKE) clean
+QMAKE_CLEAN += src/leveldb/libleveldb.a; cd $$PWD/src/leveldb ; $(MAKE) clean
 
 # regenerate src/build.h
 !win32|contains(USE_BUILD_INFO, 1) {
