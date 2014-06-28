@@ -8,7 +8,7 @@ http://lottoshares.org
 Copyright (c) 2009-2013 Bitcoin Developers
 Copyright (c) 2011-2013 Litecoin Developers
 Copyright (c) 2013-2014 United Scrypt Coin Developers
-Copyright (c) 2011-2013 LottoShares Developers
+Copyright (c) 2014 LottoShares Developers
 
 What is LottoShares?
 --------------------
