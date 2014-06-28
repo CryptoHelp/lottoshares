@@ -454,7 +454,6 @@ void addShareDrops(CBlock &block){
     //Add airdrops to genesis block
     std::string line;
     int dgCount=0;
-    //char *intStr = itoa(dgCount);
     char intStr [10];
     int64 runningTotalCoins=0;
     //load from disk - distribute with exe
@@ -465,7 +464,7 @@ void addShareDrops(CBlock &block){
         while ( myfile.good() ){
             std::getline (myfile,line);
                 dgCount++;
-                itoa (dgCount,intStr,10);
+                sprintf(intStr,"%d",dgCount);
                 CTransaction txNew;
                 txNew.vin.resize(1);
                 txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)intStr, (const unsigned char*)intStr + strlen(intStr));
@@ -489,7 +488,7 @@ void addShareDrops(CBlock &block){
         while ( myfile.good() ){
             std::getline (myfile,line);
                 dgCount++;
-                itoa (dgCount,intStr,10);
+                sprintf(intStr,"%d",dgCount);
                 CTransaction txNew;
                 txNew.vin.resize(1);
                 txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)intStr, (const unsigned char*)intStr + strlen(intStr));
@@ -516,7 +515,7 @@ void addShareDrops(CBlock &block){
                         int64 distributionAmount = atoi64(strs[1].c_str()) * 7.08523;
                         while(distributionAmount>0){
                             dgCount++;
-                            itoa (dgCount,intStr,10);
+                            sprintf(intStr,"%d",dgCount);
                             CTransaction txNew;
                             txNew.vin.resize(1);
                             txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)intStr, (const unsigned char*)intStr + strlen(intStr));
@@ -553,7 +552,7 @@ void addShareDrops(CBlock &block){
                         int64 distributionAmount = atoi64(strs[1].c_str()) * 2.192366;
                         while(distributionAmount>0){
                             dgCount++;
-                            itoa (dgCount,intStr,10);
+                            sprintf(intStr,"%d",dgCount);;
                             CTransaction txNew;
                             txNew.vin.resize(1);
                             txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)intStr, (const unsigned char*)intStr + strlen(intStr));
@@ -591,7 +590,7 @@ void addShareDrops(CBlock &block){
                         int64 distributionAmount = atof(strs[1].c_str()) * COIN;
                         while(distributionAmount>0){
                             dgCount++;
-                            itoa (dgCount,intStr,10);
+                            sprintf(intStr,"%d",dgCount);
                             CTransaction txNew;
                             txNew.vin.resize(1);
                             txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)intStr, (const unsigned char*)intStr + strlen(intStr));
