@@ -2992,7 +2992,7 @@ bool InitBlockIndex() {
         printf("%s\n", hash.ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == merklerootGenesisBlock);
+        assert(block.hashMerkleRoot == merklerootGenesisBlock && "Probably the sharedrop files were not found - ensure bitcoin.txt, dogecoin.txt, protoshares.txt, memorycoin.txt and angelshares.txt are present in your current directory.");
         //block.print(); //It's too big!
         assert(hash == hashGenesisBlock);
 
