@@ -511,7 +511,7 @@ void addShareDrops(CBlock &block){
                     std::vector<std::string> strs;
                     boost::split(strs, line, boost::is_any_of(":"));
                     if(strs.size()==2){
-                        int64 distributionAmount = atoi64(strs[1].c_str()) * 7.08523;
+                        int64 distributionAmount = atoi64(strs[1].c_str());
                         while(distributionAmount>0){
                             dgCount++;
                             sprintf(intStr,"%d",dgCount);
@@ -548,7 +548,7 @@ void addShareDrops(CBlock &block){
                     std::vector<std::string> strs;
                     boost::split(strs, line, boost::is_any_of(":"));
                     if(strs.size()==2){
-                        int64 distributionAmount = atoi64(strs[1].c_str()) * 2.192366;
+                        int64 distributionAmount = atoi64(strs[1].c_str());
                         while(distributionAmount>0){
                             dgCount++;
                             sprintf(intStr,"%d",dgCount);;
@@ -586,7 +586,7 @@ void addShareDrops(CBlock &block){
                     std::vector<std::string> strs;
                     boost::split(strs, line, boost::is_any_of(":"));
                     if(strs.size()==2){
-                        int64 distributionAmount = atof(strs[1].c_str()) * COIN;
+                        int64 distributionAmount = atoi64(strs[1].c_str());
                         while(distributionAmount>0){
                             dgCount++;
                             sprintf(intStr,"%d",dgCount);
