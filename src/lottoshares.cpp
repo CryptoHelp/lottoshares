@@ -17,7 +17,6 @@ using namespace boost;
 using namespace std;
 using namespace boost;
 #include <stdio.h>
-#include <curl/curl.h>
 #include <string>
 
 string TIMEKEEPERSIGNINGADDRESS     ="LTSLTSoPZPJuLThVeytMDbUHMFgJwYDtJq";
