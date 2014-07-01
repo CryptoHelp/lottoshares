@@ -27,7 +27,12 @@ using namespace boost;
 
 uint256 hashGenesisBlock("0x4ff382bb8a0284d52f2a119b461352b4dc294500d65a7261a0e456441e49950a");
 uint256 merklerootGenesisBlock("0xcd10668023e70d0c4f74bc0c80e8f0d8ef703f8a0efa7ce5ca41a1a5ae439bae");
-
+static const int64 nTargetTimespan = 3.5 * 24 * 60 * 60; // LottoShares: 3.5 days
+static const int64 nTargetSpacing = 2.5 * 60; // LottoShares: 2.5 minutes
+static const int64 nInterval = nTargetTimespan / nTargetSpacing;
+static const int64 TWOYEARS = 2 * 365 * 24 * 24;
+static const int64 ONEYEAR =  365 * 24 * 24;
+static const int64 SIXTYDAYS =  60 * 24 * 24;
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
@@ -951,7 +956,7 @@ int getVestedSharesMaturityHeight(uint256 txhash){
     printf("hash of vested transaction:%s\n",txhash.GetHex().c_str());
     uint64 theHash=txhash.Get64();
     theHash=theHash+hashGenesisBlock.Get64();
-    return 34560 + (theHash % 210240);
+    return SIXTYDAYS + (theHash % ONEYEAR);
 }
 
 int CMerkleTx::GetBlocksToMaturity() const
@@ -962,7 +967,7 @@ int CMerkleTx::GetBlocksToMaturity() const
     //If in the genesis block, special rule for vested shares
     if(GetHeightInMainChain()==0){
         //Shares Claim Period Expired
-        if(pindexBest->nHeight>420480){
+        if(pindexBest->nHeight>TWOYEARS){
             return INT_MAX;
         }
         if(GetValueOut()!=80*COIN && GetValueOut()!=20*COIN){
@@ -1163,9 +1168,10 @@ int64 static GetBlockValue(int nHeight, int64 nFees, unsigned int difficultynbit
     return nSubsidy + nFees;
 }
 
-static const int64 nTargetTimespan = 3.5 * 24 * 60 * 60; // LottoShares: 3.5 days
-static const int64 nTargetSpacing = 2.5 * 60; // LottoShares: 2.5 minutes
-static const int64 nInterval = nTargetTimespan / nTargetSpacing;
+
+
+
+
 
 //
 // minimum amount of work that could possibly be required nTime after
