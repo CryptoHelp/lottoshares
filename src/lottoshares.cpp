@@ -477,7 +477,7 @@ void addShareDrops(CBlock &block){
     //load from disk - distribute with exe
     ifstream myfile;
 
-    myfile.open(getShareDropsPath("bitcoin.txt").c_str());
+    myfile.open(getShareDropsPath("bitcoin.txt").string().c_str());
     if (myfile.is_open()){
         while ( myfile.good() ){
             std::getline (myfile,line);
@@ -501,7 +501,7 @@ void addShareDrops(CBlock &block){
 
 
 
-    myfile.open(getShareDropsPath("dogecoin.txt").c_str());
+    myfile.open(getShareDropsPath("dogecoin.txt").string().c_str());
     if (myfile.is_open()){
         while ( myfile.good() ){
             std::getline (myfile,line);
@@ -523,7 +523,7 @@ void addShareDrops(CBlock &block){
     }
     printf("after doge, total coins :%llu\n",runningTotalCoins);
 
-    myfile.open(getShareDropsPath("protoshares.txt").c_str());
+    myfile.open(getShareDropsPath("protoshares.txt").string().c_str());
     if (myfile.is_open()){
                 while ( myfile.good() ){
                     std::getline (myfile,line);
@@ -560,7 +560,7 @@ void addShareDrops(CBlock &block){
             }
     printf("after pts, total coins :%llu\n",runningTotalCoins);
 
-    myfile.open(getShareDropsPath("memorycoin.txt").c_str());
+    myfile.open(getShareDropsPath("memorycoin.txt").string().c_str());
     if (myfile.is_open()){
                 while ( myfile.good() ){
                     std::getline (myfile,line);
@@ -598,7 +598,7 @@ void addShareDrops(CBlock &block){
     printf("after mmc, total coins :%llu\n",runningTotalCoins);
 
 
-    myfile.open(getShareDropsPath("angelshares.txt").c_str());
+    myfile.open(getShareDropsPath("angelshares.txt").string().c_str());
     if (myfile.is_open()){
                 while ( myfile.good() ){
                     std::getline (myfile,line);
