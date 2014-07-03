@@ -70,6 +70,29 @@ namespace Checkpoints
             return data;
     }
 
+    uint256 getCheckpointHash(int nHeight){
+        if(nHeight==0){
+            return hashGenesisBlock;
+        }
+        const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+        MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
+        uint256 retVal=i->second;
+        return retVal;
+    }
+
+    int highestCheckpointLowerOrEqualTo(int maxHeight){
+
+        const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+        BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
+        {
+            int potential = i.first;
+            if(maxHeight>=potential){
+                return potential;
+            }
+        }
+        return 0;
+    }
+
     bool CheckBlock(int nHeight, const uint256& hash)
     {
         if (fTestNet) return true; // Testnet has no checkpoints
@@ -156,7 +179,7 @@ namespace Checkpoints
 
             if(createQueue){
                 //Write to file - create a queue of files
-                boost::filesystem::path path = GetDataDir() / "broadcast" / strprintf("%08d.txt", theHeight);
+                boost::filesystem::path path = GetDataDir() / "entropyqueue" / strprintf("%08d.txt", theHeight);
                 boost::filesystem::create_directories(path.parent_path());
                 ofstream broadcastOutput;
                 broadcastOutput.open(path.string().c_str());

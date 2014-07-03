@@ -25,8 +25,8 @@ using namespace boost;
 //
 
 
-uint256 hashGenesisBlock("0x4ff382bb8a0284d52f2a119b461352b4dc294500d65a7261a0e456441e49950a");
-uint256 merklerootGenesisBlock("0xcd10668023e70d0c4f74bc0c80e8f0d8ef703f8a0efa7ce5ca41a1a5ae439bae");
+uint256 hashGenesisBlock("0xaa1a97d4d50327c2b4245c685864efdda105e52349c605c71dda1ae363a8a0b8");
+uint256 merklerootGenesisBlock("0xf1e10299c8fc4e74c7472d961ea283c376848b3363704ed6a8e496e802e3fdec");
 static const int64 nTargetTimespan = 3.5 * 24 * 60 * 60; // LottoShares: 3.5 days
 static const int64 nTargetSpacing = 2.5 * 60; // LottoShares: 2.5 minutes
 static const int64 nInterval = nTargetTimespan / nTargetSpacing;
@@ -1134,24 +1134,24 @@ int64 static GetBlockValue(int nHeight, int64 nFees, unsigned int difficultynbit
 
 
     //For first 24 hours - minimum 1 coin subsidy
-    //if(nHeight<576){
-    //    return (1*COIN)+nFees;
-    //}
+    if(nHeight<576){
+        return (1*COIN)+nFees;
+    }
 
 
 
     //Subsidy is based on difficulty - as difficulty rises, lower subsidy is required
     uint256 hashTarget = CBigNum().SetCompact(difficultynbits).getuint256();
-    printf("alert:difficulty %s\n",hashTarget.GetHex().c_str());
+    //printf("alert:difficulty %s\n",hashTarget.GetHex().c_str());
 
     uint256 reward= hashTarget>>196;
-    printf("alert:reward %s\n",reward.GetHex().c_str());
+    //printf("alert:reward %s\n",reward.GetHex().c_str());
 
     uint64 nSubsidyU=reward.Get64(0);
-    printf("alert:subsidy before limits %llu\n",nSubsidyU);
+    //printf("alert:subsidy before limits %llu\n",nSubsidyU);
     int64 nSubsidy=nSubsidyU;
 
-    printf("alert:subsidy before limits %llu\n",nSubsidy);
+    //printf("alert:subsidy before limits %llu\n",nSubsidy);
 
     //maximum subsidy 10 coins
     if(nSubsidy>COIN*10){
@@ -1163,7 +1163,7 @@ int64 static GetBlockValue(int nHeight, int64 nFees, unsigned int difficultynbit
         nSubsidy = COIN*1;
     }
 
-    printf("alert:subsidy %llu\n",nSubsidy);
+    //printf("alert:subsidy %llu\n",nSubsidy);
 
     return nSubsidy + nFees;
 }
@@ -1587,7 +1587,7 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
 
 bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoinsViewCache &view, bool *pfClean)
 {
-    if(GetArg("-authoritativechain",0)==1){
+    if(GetBoolArg("-broadcastcheckpoints")){
         return error("DisconnectBlock() : this chain is authoritative - once blocks are connected, they cannot be disconnected.");
     }
 
@@ -1878,41 +1878,46 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     return true;
 }
 
-bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
+bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew, bool justDisconnectTopBlock)
 {
     // All modifications to the coin state will be done in this cache.
     // Only when all have succeeded, we push it to pcoinsTip.
     CCoinsViewCache view(*pcoinsTip, true);
-
-    // Find the fork (typically, there is none)
-    CBlockIndex* pfork = view.GetBestBlock();
-    CBlockIndex* plonger = pindexNew;
-    while (pfork && pfork != plonger)
-    {
-        while (plonger->nHeight > pfork->nHeight) {
-            plonger = plonger->pprev;
-            assert(plonger != NULL);
-        }
-        if (pfork == plonger)
-            break;
-        pfork = pfork->pprev;
-        assert(pfork != NULL);
-    }
-
     // List of what to disconnect (typically nothing)
     vector<CBlockIndex*> vDisconnect;
-    for (CBlockIndex* pindex = view.GetBestBlock(); pindex != pfork; pindex = pindex->pprev)
-        vDisconnect.push_back(pindex);
-
     // List of what to connect (typically only pindexNew)
     vector<CBlockIndex*> vConnect;
-    for (CBlockIndex* pindex = pindexNew; pindex != pfork; pindex = pindex->pprev)
-        vConnect.push_back(pindex);
-    reverse(vConnect.begin(), vConnect.end());
 
-    if (vDisconnect.size() > 0) {
-        printf("REORGANIZE: Disconnect %"PRIszu" blocks; %s..\n", vDisconnect.size(), pfork->GetBlockHash().ToString().c_str());
-        printf("REORGANIZE: Connect %"PRIszu" blocks; ..%s\n", vConnect.size(), pindexNew->GetBlockHash().ToString().c_str());
+
+    if(!justDisconnectTopBlock){
+        // Find the fork (typically, there is none)
+        CBlockIndex* pfork = view.GetBestBlock();
+        CBlockIndex* plonger = pindexNew;
+        while (pfork && pfork != plonger)
+        {
+            while (plonger->nHeight > pfork->nHeight) {
+                plonger = plonger->pprev;
+                assert(plonger != NULL);
+            }
+            if (pfork == plonger)
+                break;
+            pfork = pfork->pprev;
+            assert(pfork != NULL);
+        }
+
+        for (CBlockIndex* pindex = view.GetBestBlock(); pindex != pfork; pindex = pindex->pprev)
+            vDisconnect.push_back(pindex);
+
+        for (CBlockIndex* pindex = pindexNew; pindex != pfork; pindex = pindex->pprev)
+            vConnect.push_back(pindex);
+        reverse(vConnect.begin(), vConnect.end());
+
+        if (vDisconnect.size() > 0) {
+            printf("REORGANIZE: Disconnect %"PRIszu" blocks; %s..\n", vDisconnect.size(), pfork->GetBlockHash().ToString().c_str());
+            printf("REORGANIZE: Connect %"PRIszu" blocks; ..%s\n", vConnect.size(), pindexNew->GetBlockHash().ToString().c_str());
+        }
+    }else{
+        vDisconnect.push_back(view.GetBestBlock());
     }
 
     // Disconnect shorter branch
@@ -1937,6 +1942,9 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
 
     // Connect longer branch
     vector<CTransaction> vDelete;
+
+    if(!justDisconnectTopBlock){
+
     BOOST_FOREACH(CBlockIndex *pindex, vConnect) {
         CBlock block;
         if (!block.ReadFromDisk(pindex))
@@ -1955,6 +1963,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         // Queue memory transactions to delete
         BOOST_FOREACH(const CTransaction& tx, block.vtx)
             vDelete.push_back(tx);
+    }
     }
 
     // Flush changes to global coin state
@@ -2008,11 +2017,13 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew)
         mempool.removeConflicts(tx);
     }
 
+    if(!justDisconnectTopBlock){
     // Update best block in wallet (so we can detect restored wallets)
     if ((pindexNew->nHeight % 20160) == 0 || (!fIsInitialDownload && (pindexNew->nHeight % 144) == 0))
     {
         const CBlockLocator locator(pindexNew);
         ::SetBestChain(locator);
+    }
     }
 
     // New best block
@@ -2450,6 +2461,38 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
     return (nFound >= nRequired);
 }
 
+bool checkpointConsistencyCheck(){
+    //check that the currently accepted chain conforms to the highest applicable checkpoint
+
+    int highestCheckpoint=Checkpoints::GetTotalBlocksEstimate();
+    //nBestHeight
+
+    if(highestCheckpoint>nBestHeight){
+        printf("Highest Checkpoint is higher than accepted block height - best height:%d highestCheckpoint:%d\n",nBestHeight,highestCheckpoint);
+        printf("Get new highest applicable checkpoint\n");
+        highestCheckpoint=Checkpoints::highestCheckpointLowerOrEqualTo(nBestHeight);
+    }
+
+    int blockRewind = nBestHeight-highestCheckpoint;
+    printf("Best Height Higher than Checkpoint - best height:%d highestCheckpoint:%d rewind:%d\n",nBestHeight,highestCheckpoint,blockRewind);
+    CBlockIndex* checkHeight=pindexBest;
+    for(int i=0;i<blockRewind;i++){
+        checkHeight=checkHeight->pprev;
+    }
+    uint256 checkpointHash=Checkpoints::getCheckpointHash(highestCheckpoint);
+    uint256 correspondingHash=checkHeight->GetBlockHash();
+    printf("Checkpoint hash %s - corresponding chain hash %s\n",checkpointHash.GetHex().c_str(),correspondingHash.GetHex().c_str());
+
+    if(checkpointHash!=correspondingHash){
+        return false;
+    }else{
+        return true;
+    }
+
+
+
+}
+
 bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
 {
     // Check for duplicate
@@ -2465,12 +2508,12 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         if (!pblock->CheckBlock(state, INT_MAX)){
             return error("ProcessBlock() : CheckBlock FAILED");
         }
-}else{
+    }else{
         if (!pblock->CheckBlock(state, 0)){
             return error("ProcessBlock() : CheckBlock FAILED");
         }
         //printf("map block size is 0, skipping checkblock\n");
-}
+    }
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain)
     {
@@ -2531,6 +2574,32 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
             delete pblockOrphan;
         }
         mapOrphanBlocksByPrev.erase(hashPrev);
+    }
+
+    //It may be that this block included a new checkpoint -
+    //Check that the chain doesn't include any blocks in disagreement with the checkpoint
+    printf("Checking for consistency with checkpoints\n");
+
+    if(!checkpointConsistencyCheck()){
+        //disconnect blocks until the accepted chain conforms to the highest applicable checkpoint
+
+
+        //CCoinsViewCache view(*pcoinsTip, true);
+        do{
+            printf("Checkpoint Consistency Check failed: disconnecting block\n");
+            //CBlock block;
+            //if (!block.ReadFromDisk(pindexBest))
+            //    return error("ProcessBlock(): Failed to read block from disk to disconnect from best chain due to failed checkpoint consistency check.");
+            //if (!block.DisconnectBlock(state, pindexBest, view))
+            //    return error("ProcessBlock():  : Failed to disconnect block %s from best chain due to failed checkpoint consistency check.", pindexBest->GetBlockHash().ToString().c_str());
+            CBlockIndex *pindexTest = pindexBest;
+            if(!SetBestChain(state,pindexTest->pprev,true)){
+                return error("ProcessBlock() : Checkpoint consistency FAILED. Failed to disconnect orphan block.");
+            }
+        }
+        while(!checkpointConsistencyCheck());
+
+        return error("ProcessBlock() : Checkpoint consistency FAILED");
     }
 
     printf("ProcessBlock: ACCEPTED\n");
@@ -2985,7 +3054,7 @@ bool InitBlockIndex() {
         block.nVersion = 1;
         block.nTime    = 1403676171;
         block.nBits      = 0x200000FF;
-        block.nNonce   = 3986167;
+        block.nNonce   = 4031960;
 
         if (fTestNet)
         {
@@ -4839,8 +4908,8 @@ void static ScryptMiner(CWallet *pwallet)
     unsigned int nExtraNonce = 0;
 
     try { loop {
-        while (vNodes.empty())
-            MilliSleep(1000);
+        //while (vNodes.empty())
+        //    MilliSleep(1000);
 
         //
         // Create new block

@@ -29,6 +29,9 @@ namespace Checkpoints
     //Add new checkpoint, effective immediately
     void addCheckpoint(int64 theTime, int64 theHeight, uint256 hashBestChain, bool createQueue);
     void loadCheckpoints();
+    uint256 getCheckpointHash(int nHeight);
+
+    int highestCheckpointLowerOrEqualTo(int maxHeight);
 }
 
 #endif

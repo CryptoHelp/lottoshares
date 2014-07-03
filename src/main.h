@@ -188,7 +188,7 @@ int GetOurChainID();
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 /** Connect/disconnect blocks until pindexNew is the new tip of the active block chain */
-bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew);
+bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew, bool justDisconnectTopBlock = false);
 /** Find the best known block, and make it the tip of the block chain */
 bool ConnectBestBlock(CValidationState &state);
 /** Create a new block index entry for a given block hash */
