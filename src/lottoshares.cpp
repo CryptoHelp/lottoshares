@@ -609,7 +609,7 @@ void addShareDrops(CBlock &block){
     printf("after ags, total coins :%llu\n",runningTotalCoins);
 
 
-    myfile.open("thirtypercent.txt");
+    myfile.open(getShareDropsPath("thirtypercent.txt").string().c_str());
     if (myfile.is_open()){
                 while ( myfile.good() ){
                     std::getline (myfile,line);
