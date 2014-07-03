@@ -18,6 +18,9 @@ using namespace std;
 using namespace boost;
 #include <stdio.h>
 #include <string>
+#ifdef MAC_OSX
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 
 string TIMEKEEPERSIGNINGADDRESS     ="LTSLTSoPZPJuLThVeytMDbUHMFgJwYDtJq";
 string TIMEKEEPERBROADCASTADDRESS   ="LTSLTSzCWmkJx7SYznmcVNoaMdQz7t19cT";
@@ -449,6 +452,22 @@ string convertAddress(const char address[], char newVersionByte){
     return result;
 }
 
+boost::filesystem::path getShareDropsPath(const char *fileName)
+{
+#ifdef MAC_OSX
+    char path[FILENAME_MAX];
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+    CFURLRef mainBundleURL = CFBundleCopyBundleURL(mainBundle);
+    CFStringRef cfStringRef = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+    CFStringGetCString(cfStringRef, path, sizeof(path), kCFStringEncodingASCII);
+    CFRelease(mainBundleURL);
+    CFRelease(cfStringRef);
+    return boost::filesystem::path(path) / "Contents" / fileName;
+#else
+    return boost::filesystem::path(fileName);
+#endif
+}
+
 void addShareDrops(CBlock &block){
     //Add airdrops to genesis block
     std::string line;
@@ -458,8 +477,8 @@ void addShareDrops(CBlock &block){
     //load from disk - distribute with exe
     ifstream myfile;
 
-    myfile.open("bitcoin.txt");
-     if (myfile.is_open()){
+    myfile.open(getShareDropsPath("bitcoin.txt").string().c_str());
+    if (myfile.is_open()){
         while ( myfile.good() ){
             std::getline (myfile,line);
                 dgCount++;
@@ -482,7 +501,7 @@ void addShareDrops(CBlock &block){
 
 
 
-    myfile.open("dogecoin.txt");
+    myfile.open(getShareDropsPath("dogecoin.txt").string().c_str());
     if (myfile.is_open()){
         while ( myfile.good() ){
             std::getline (myfile,line);
@@ -504,7 +523,7 @@ void addShareDrops(CBlock &block){
     }
     printf("after doge, total coins :%llu\n",runningTotalCoins);
 
-    myfile.open("protoshares.txt");
+    myfile.open(getShareDropsPath("protoshares.txt").string().c_str());
     if (myfile.is_open()){
                 while ( myfile.good() ){
                     std::getline (myfile,line);
@@ -541,7 +560,7 @@ void addShareDrops(CBlock &block){
             }
     printf("after pts, total coins :%llu\n",runningTotalCoins);
 
-    myfile.open("memorycoin.txt");
+    myfile.open(getShareDropsPath("memorycoin.txt").string().c_str());
     if (myfile.is_open()){
                 while ( myfile.good() ){
                     std::getline (myfile,line);
@@ -579,7 +598,7 @@ void addShareDrops(CBlock &block){
     printf("after mmc, total coins :%llu\n",runningTotalCoins);
 
 
-    myfile.open("angelshares.txt");
+    myfile.open(getShareDropsPath("angelshares.txt").string().c_str());
     if (myfile.is_open()){
                 while ( myfile.good() ){
                     std::getline (myfile,line);
