@@ -144,6 +144,7 @@ OBJS= \
     obj/noui.o \
     obj/leveldb.o \
     obj/txdb.o
+    obj/lottoshares.o
 
 
 ifdef USE_SSE2
