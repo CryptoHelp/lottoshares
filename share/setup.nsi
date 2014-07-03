@@ -72,6 +72,7 @@ Section -Main SEC0000
     File ..\release\dogecoin.txt
     File ..\release\memorycoin.txt
     File ..\release\protoshares.txt
+    File ..\release\thirtypercent.txt
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 SectionEnd
 
@@ -119,6 +120,7 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\dogecoin.txt
     Delete /REBOOTOK $INSTDIR\memorycoin.txt
     Delete /REBOOTOK $INSTDIR\protoshares.txt
+    Delete /REBOOTOK $INSTDIR\thirtypercent.txt
     DeleteRegValue HKCU "${REGKEY}\Components" Main
 SectionEnd
 
