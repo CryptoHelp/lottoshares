@@ -138,7 +138,7 @@ void VoteCoinsDialog::sendToRecipients(){
         return;
     }
 
-    WalletModel::SendCoinsReturn sendstatus = model->sendCoins(recipients);
+    WalletModel::SendCoinsReturn sendstatus = model->sendCoins(recipients, NULL, true);
     switch(sendstatus.status)
     {
     case WalletModel::InvalidAddress:

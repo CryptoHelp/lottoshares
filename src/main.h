@@ -26,6 +26,9 @@ class CAuxPow;
 
 struct CBlockIndexWorkComparator;
 
+static const double TICKETCOMMISSIONRATE = 0.01;
+static const double PRIZEPAYMENTCOMMISSIONS = 0.001;
+
 /** Allow for extra large genesis block */
 static const unsigned int GENESIS_MAX_BLOCK_SIZE = 150*1000000;                      // 150*1000KB block limit
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
@@ -198,6 +201,7 @@ bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned in
 /** Abort with a message */
 bool AbortNode(const std::string &msg);
 
+int64 GetBlockValue(int nHeight, int64 nFees, unsigned int difficultynbits);
 
 
 

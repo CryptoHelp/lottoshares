@@ -8,6 +8,7 @@
 using namespace std;
 
 #include "checkpoints.h"
+#include "lottoshares.h"
 
 #include "main.h"
 #include "uint256.h"
@@ -166,7 +167,7 @@ namespace Checkpoints
         return NULL;
     }
 
-    void addCheckpoint(int64 theTime, int64 theHeight, uint256 theHashBestChain, bool createQueue){
+    void addCheckpoint(int64 theTime, int64 theHeight, uint256 theHashBestChain, bool createQueue, bool blocklog){
         if(mapCheckpoints[theHeight]==0){
             ofstream myfile;
             myfile.open ((GetDataDir() / "checkpoints.txt").string().c_str(), ios::app);
@@ -187,6 +188,9 @@ namespace Checkpoints
                 broadcastOutput.close();
             }
 
+            if(blocklog){
+                writeLogInfoForBlock(theHashBestChain);
+            }
         }
     }
 

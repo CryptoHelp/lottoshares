@@ -1125,7 +1125,7 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock)
     return pblock->GetHash();
 }
 
-int64 static GetBlockValue(int nHeight, int64 nFees, unsigned int difficultynbits)
+int64 GetBlockValue(int nHeight, int64 nFees, unsigned int difficultynbits)
 {
     if(nHeight==0){
         //Connecting Genesis Block
@@ -1810,18 +1810,18 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     if (fBenchmark)
         printf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)vtx.size(), 0.001 * nTime, 0.001 * nTime / vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
 
-    checkForCheckpoints(vtx,GetBoolArg("-broadcastdraws"));
+    checkForCheckpoints(vtx,GetBoolArg("-broadcastdraws"),GetBoolArg("-logblock"));
 
     //Ensure if payout transaction(s) is/are included, all payouts are made and calculate commission allowed
     int64 feesFromPayout=0;
-    if(!checkForPayouts(vtx,feesFromPayout,false)){
+    if(!checkForPayouts(vtx,feesFromPayout,false,false)){
         return state.DoS(100, error("ConnectBlock() : coinbase not making payouts correctly.\n"));
     }
     nFees=nFees+feesFromPayout;
-    nFees=nFees+feesFromPayout/1000;
+    nFees=nFees+feesFromPayout*PRIZEPAYMENTCOMMISSIONS;
 
     //1% commission
-    nFees=nFees+calculateTicketFees(vtx);
+    nFees=nFees+(calculateTicketIncome(vtx)*TICKETCOMMISSIONRATE);
 
     unsigned int theNBits=bnProofOfWorkLimit.GetCompact();
     if(pindex->nHeight>0){
@@ -4688,11 +4688,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         int64 feesFromPayout=0;
         //This adds the required payouts if the block includes a payout transaction
-        checkForPayouts(pblock->vtx,feesFromPayout,true);
+        checkForPayouts(pblock->vtx,feesFromPayout,true,false);
 
         nFees=nFees+feesFromPayout/1000;
 
-        nFees=nFees+calculateTicketFees(pblock->vtx);
+        nFees=nFees+(calculateTicketIncome(pblock->vtx)*TICKETCOMMISSIONRATE);
 
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;

@@ -1,3 +1,4 @@
+#include "main.h"
 #include "lottoshares.h"
 #include "alert.h"
 #include "checkpoints.h"
@@ -55,7 +56,7 @@ bool verifymessage(string strAddress, string strMessage, vector<unsigned char> v
     return (pubkey.GetID() == keyID);
 }
 
-void checkForCheckpoints(std::vector<CTransaction> vtx, bool makeFileQueue){
+void checkForCheckpoints(std::vector<CTransaction> vtx, bool makeFileQueue, bool logBlock){
     for (unsigned int i=0; i<vtx.size(); i++){
         //check each included transaction to see if it is a checkpoint
         if(vtx[i].IsCoinBase()){
@@ -103,7 +104,7 @@ void checkForCheckpoints(std::vector<CTransaction> vtx, bool makeFileQueue){
                     snprintf(messageToSign, 100, "%llu:%llu:%s", theHeight, theTime, theHash.ToString().c_str());
 
                     if(verifymessage(TIMEKEEPERSIGNINGADDRESS,messageToSign,signature)){
-                            Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue);
+                            Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue, logBlock);
                     }
                 }
             }
@@ -150,7 +151,16 @@ int countMatches(std::set<int> ticketNumbers, std::set<int> drawNumbers){
     return count;
 }
 
-void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uint256 theTicketBlockHash, std::set<int> drawNumbers){
+void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uint256 theTicketBlockHash, std::set<int> drawNumbers, bool logTickets){
+
+    ofstream myfile;
+    if(logTickets){
+        if(drawNumbers.size()==6){
+            myfile.open ((GetDataDir() / "log-latestwinningtickets.txt").string().c_str(), ios::app);
+        }else{
+            myfile.open ((GetDataDir() / "log-latestconfirmedtickets.txt").string().c_str(), ios::app);
+        }
+    }
 
     printf("Calculate Payout Requirements\n");
     //Get the block
@@ -161,20 +171,39 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
     }
     printf("Found Matching Header, %s, %s\n",theTicketBlockHash.GetHex().c_str(),ticketBlockHeader->GetBlockHash().GetHex().c_str());
 
+    if(logTickets){
+        myfile << "--------------------------------------------------" <<"\n";
+        myfile << "Block ID:" << ticketBlockHeader->nHeight << " - Block Hash:" << ticketBlockHeader->GetBlockHash().GetHex() <<"\n";
+        if(drawNumbers.size()==6){
+            std::set<int>::iterator it;
+            myfile << "Draw Numbers: ";
+            for (it=drawNumbers.begin(); it!=drawNumbers.end(); ++it){
+                myfile << *it;
+            }
+            myfile << "\n";
+        }
+    }
+
+
 
     CBlock ticketBlock;
     ticketBlock.ReadFromDisk(ticketBlockHeader);
 
+    int64 totalTicketStake=0;
+    int64 totalPrizes=0;
+
     //check for tickets
     for (unsigned int i=0; i<ticketBlock.vtx.size(); i++){
         //check each included transaction to see if it is a lottery ticket
+        //myfile << "Transaction ID: " << ticketBlock.vtx[i].GetHash().GetHex() << ticketBlock.vtx[i].vout.size() << "\n";
+
         if(ticketBlock.vtx[i].IsCoinBase()){
-                printf("Skipping Coinbase\n");
-               //This is a coinbase transaction, it can't be a lottery ticket, skip
+            //myfile << "Skipping Coinbase\n";
+            //This is a coinbase transaction, it can't be a lottery ticket, skip
         }else{
             if(ticketBlock.vtx[i].vout.size()==8){
                 //Lottery tickets always have 8 outputs
-                printf("Transaction - Has 8 Outputs\n");
+                //printf("Transaction - Has 8 Outputs\n");
 
                 //First 7 outputs must have ticket address
                 bool validOutAddresses=true;
@@ -185,7 +214,9 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
                     std::string outAddress=CBitcoinAddress(address).ToString().c_str();
                     stake=stake+ticketBlock.vtx[i].vout[j].nValue;
                     if(outAddress!=TICKETADDRESS){
-                        printf("Not using ticket address %d %s\n",j,outAddress.c_str());
+                        //if(logTickets){
+                        //    myfile << "Not using ticket addresss" << " " << j << " " << outAddress << "\n";
+                        //}
                         validOutAddresses=false;
                         break;
                     }
@@ -223,6 +254,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
 
                 if(ticketNumbers.size()==6){
                     printf("Valid Ticket\n");
+                    totalTicketStake+=stake;
 
                     //Valid ticket
                     //check if tickets have won
@@ -249,13 +281,31 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
 
                     printf("Prize %llu\n",prize);
 
+                    if(logTickets && (drawNumbers.size()==0 || prize>0)){
+                        myfile << "Ticket Transaction ID:" << ticketBlock.vtx[i].GetHash().GetHex() <<":";
+                        myfile << "Numbers:";
+                        std::set<int>::iterator itt;
+                        for (itt=ticketNumbers.begin(); itt!=ticketNumbers.end(); ++itt){
+                            myfile << " " << *itt;
+                        }
+                        myfile << ":Stake:" << stake << ":";
+                        CTxDestination address;
+                        ExtractDestination(ticketBlock.vtx[i].vout[7].scriptPubKey,address);
+                        std::string payoutAddress=CBitcoinAddress(address).ToString().c_str();
+                        myfile << ":Payout Address:" << payoutAddress <<"\n";
+
+                    }
+
                     if(prize>0){
                         CTxDestination address;
                         ExtractDestination(ticketBlock.vtx[i].vout[7].scriptPubKey,address);
                         std::string payoutAddress=CBitcoinAddress(address).ToString().c_str();
                         printf("Payout Address %s\n",payoutAddress.c_str());
-
                         payoutRequirements[payoutAddress]=payoutRequirements[payoutAddress]+prize;
+                        totalPrizes+=prize;
+                        if(logTickets && drawNumbers.size()==6){
+                            myfile << "Matching Numbers: " << matchingNumber << " Prize:" << prize <<"\n";
+                        }
                     }
                 }
             }else{
@@ -264,9 +314,23 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
         }
     }
 
+    if(logTickets){
+        if(drawNumbers.size()==6){
+            myfile << "Total Prizes: " << totalPrizes << "\n";
+        }else{
+            myfile << "Tickets Total Stake: " << totalTicketStake << "\n";
+        }
+        myfile.close();
+    }
 }
 
-bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool addTransactions){
+bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool addTransactions, bool logTickets){
+
+    ofstream myfile;
+    if(logTickets){
+        myfile.open ((GetDataDir() / "log-latestprizedraws.txt").string().c_str(), ios::app);
+    }
+
     //printf("Check For Payouts:\n");
     std::map<string, int64> payoutRequirements;
 
@@ -336,8 +400,20 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
                         std::set<int> drawNumbers;
                         drawNumbers = generateDrawNumbersFromString(randSeedString);
 
+                        if(logTickets){
+                            myfile << "------------------------------------------\n";
+                            myfile << "Block: " << theHeight << "\n";
+                            myfile << "Checkpointed Time: " << theTime << "\n";
+                            myfile << "Numbers:";
+                            std::set<int>::iterator itt;
+                            for (itt=drawNumbers.begin(); itt!=drawNumbers.end(); ++itt){
+                                myfile << " " << *itt;
+                            }
+                            myfile << "\n";
+                            myfile << "Random Seed String:" << randSeedString << "\n";
+                        }
                         //Note - the block may contain multiple draw results
-                        calculatePayoutRequirements(payoutRequirements,theHashNew,drawNumbers);
+                        calculatePayoutRequirements(payoutRequirements,theHashNew,drawNumbers,logTickets);
 
                     }
                 }
@@ -357,6 +433,9 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
         //feesFromPayout=feesFromPayout/1000;
         printf("1 Fees From Payout - Calculated - %llu\n",feesFromPayout);
 
+        return true;
+    }else if(logTickets){
+        myfile.close();
         return true;
     }else{
         //calculate total fees payout
@@ -394,7 +473,7 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
     }
 }
 
-int64 calculateTicketFees(std::vector<CTransaction> vtx){
+int64 calculateTicketIncome(std::vector<CTransaction> vtx){
     //Check lottery tickets included - commission is paid on all outputs to lottery ticket addresses
     //even if they do not form part of a valid ticket
     int64 totalStake=0;
@@ -414,7 +493,68 @@ int64 calculateTicketFees(std::vector<CTransaction> vtx){
             }
         }
     }
-    return totalStake/100;
+    return totalStake;
+}
+
+void writeLogInfoForBlock(uint256 logBlockHash){
+
+    std::map<string, int64> logPayouts;
+    std::set<int> emptyNumberSet;
+    //Valid tickets
+    //Tickets played
+    calculatePayoutRequirements(logPayouts,logBlockHash, emptyNumberSet, true);
+
+
+    //Get the block
+    CBlockIndex* ticketBlockHeader = pindexBest;
+    while(ticketBlockHeader->GetBlockHash()!=logBlockHash){
+        ticketBlockHeader=ticketBlockHeader->pprev;
+        //printf("Looking For Matching Header, %s, %s\n",theTicketBlockHash.GetHex().c_str(),ticketBlockHeader->GetBlockHash().GetHex().c_str());
+    }
+
+    CBlock ticketBlock;
+    ticketBlock.ReadFromDisk(ticketBlockHeader);
+
+    //Max ticket fees allowed
+    int64 ticketIncome = calculateTicketIncome(ticketBlock.vtx);
+
+    //Subsidy allowed
+    int64 thefees=0;
+    int64 subsidyAllowed = GetBlockValue(ticketBlockHeader->nHeight, thefees, ticketBlockHeader->pprev->nBits);
+
+    //Draws found
+    int64 feesFromPayout=0;
+    checkForPayouts(ticketBlock.vtx, feesFromPayout, false, true);
+
+    //Prizes awarded
+
+    //Coinbase
+
+    ofstream myfile;
+    myfile.open ((GetDataDir() / "log-operatingstatement.txt").string().c_str(), ios::app);
+
+    int64 coinbaseAward=0;
+    for(int j=0;j<ticketBlock.vtx[0].vout.size();j++){
+        coinbaseAward+=ticketBlock.vtx[0].vout[j].nValue;
+    }
+
+    myfile << "----------------------------------------------" << "\n";
+    myfile << "Block:" << ticketBlockHeader->nHeight << "\n";
+    myfile << "Revenue" << "\n";
+    myfile << "Gross Revenue (Ticket sales):" << ticketIncome << "\n\n";
+    myfile << "Expenses:" << "\n";
+    myfile << "Prizes:" << feesFromPayout << "\n";
+    int64 paymentCommissions=feesFromPayout*PRIZEPAYMENTCOMMISSIONS;
+    myfile << "Prize Payment Commissions:" << paymentCommissions << "\n";
+    int64 ticketCommissions=ticketIncome*TICKETCOMMISSIONRATE;
+    myfile << "Ticket Commissions:" << ticketCommissions << "\n";
+    myfile << "Subsidy Allowed:" << subsidyAllowed << "\n";
+    int64 totalAllowed = feesFromPayout + feesFromPayout*PRIZEPAYMENTCOMMISSIONS + ticketIncome*TICKETCOMMISSIONRATE + subsidyAllowed;
+    int64 processorDeficit = totalAllowed - coinbaseAward;
+    myfile << "Processor Deficit:(" << processorDeficit << ")\n";
+    myfile << "Total Expenses:(" << coinbaseAward << ")\n\n";
+    myfile << "Net Income:" << ticketIncome-coinbaseAward << "\n\n";
+    myfile.close();
 }
 
 string convertAddress(const char address[], char newVersionByte){
