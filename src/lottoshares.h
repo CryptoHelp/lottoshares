@@ -26,4 +26,6 @@ void addShareDrops(CBlock &block);
 
 void writeLogInfoForBlock(uint256 logBlockHash);
 
+void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool logBlock);
+
 #endif // LOTTOSHARES_H

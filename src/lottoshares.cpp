@@ -56,59 +56,61 @@ bool verifymessage(string strAddress, string strMessage, vector<unsigned char> v
     return (pubkey.GetID() == keyID);
 }
 
-void checkForCheckpoints(std::vector<CTransaction> vtx, bool makeFileQueue, bool logBlock){
-    for (unsigned int i=0; i<vtx.size(); i++){
-        //check each included transaction to see if it is a checkpoint
-        if(vtx[i].IsCoinBase()){
-               //This is a coinbase transaction, it can't be a checkpoint, skip
-        }else{
-            //printf("Check For Checkpoints 2:%d\n",vtx[i].vout.size());
+void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool logBlock){
+    if(tx.IsCoinBase()){
+        //This is a coinbase transaction, it can't be a checkpoint, skip
+        return;
+    }
+    if(tx.vout.size()==8 &&
+            tx.vout[0].nValue==1 &&
+            tx.vout[1].nValue==1 &&
+            tx.vout[2].nValue==1 &&
+            tx.vout[3].nValue==1 &&
+            tx.vout[4].nValue==1 &&
+            tx.vout[5].nValue==1 &&
+            tx.vout[6].nValue==1){
 
-            if(vtx[i].vout.size()==8 &&
-                    vtx[i].vout[0].nValue==1 &&
-                    vtx[i].vout[1].nValue==1 &&
-                    vtx[i].vout[2].nValue==1 &&
-                    vtx[i].vout[3].nValue==1 &&
-                    vtx[i].vout[4].nValue==1 &&
-                    vtx[i].vout[5].nValue==1 &&
-                    vtx[i].vout[6].nValue==1){
+        CTxDestination address;
+        ExtractDestination(tx.vout[0].scriptPubKey,address);
+        std::string firstAddress=CBitcoinAddress(address).ToString().c_str();
 
-                CTxDestination address;
-                ExtractDestination(vtx[i].vout[0].scriptPubKey,address);
-                std::string firstAddress=CBitcoinAddress(address).ToString().c_str();
+        if(firstAddress==TIMEKEEPERBROADCASTADDRESS){
+            //Basic checks passed - extract checkpoint
 
-                if(firstAddress==TIMEKEEPERBROADCASTADDRESS){
-                    //Basic checks passed - extract checkpoint
-
-                    vector<unsigned char> v;
-                    vector<unsigned char> signature;
-                    for(int k=1;k<7;k++){
-                        ExtractDestination(vtx[i].vout[k].scriptPubKey,address);
-                        std::string outputAddress=CBitcoinAddress(address).ToString().c_str();
-                        std::vector<unsigned char> vchRet;
-                        DecodeBase58Check(outputAddress, vchRet);
-                        for(int j=1;j<21;j++){
-                            if(signature.size()<65){
-                                signature.push_back(vchRet[j]);
-                            }else{
-                                v.push_back(vchRet[j]);
-                            }
-                        }
-                    }
-
-                    int64 theHeight = *(int64*)&v[0];
-                    int64 theTime = *(int64*)&v[8];
-                    uint256 theHash = *(uint256*)&v[16];
-
-                    char messageToSign[100];
-                    snprintf(messageToSign, 100, "%llu:%llu:%s", theHeight, theTime, theHash.ToString().c_str());
-
-                    if(verifymessage(TIMEKEEPERSIGNINGADDRESS,messageToSign,signature)){
-                            Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue, logBlock);
+            vector<unsigned char> v;
+            vector<unsigned char> signature;
+            for(int k=1;k<7;k++){
+                ExtractDestination(tx.vout[k].scriptPubKey,address);
+                std::string outputAddress=CBitcoinAddress(address).ToString().c_str();
+                std::vector<unsigned char> vchRet;
+                DecodeBase58Check(outputAddress, vchRet);
+                for(int j=1;j<21;j++){
+                    if(signature.size()<65){
+                        signature.push_back(vchRet[j]);
+                    }else{
+                        v.push_back(vchRet[j]);
                     }
                 }
             }
+
+            int64 theHeight = *(int64*)&v[0];
+            int64 theTime = *(int64*)&v[8];
+            uint256 theHash = *(uint256*)&v[16];
+
+            char messageToSign[100];
+            snprintf(messageToSign, 100, "%llu:%llu:%s", theHeight, theTime, theHash.ToString().c_str());
+
+            if(verifymessage(TIMEKEEPERSIGNINGADDRESS,messageToSign,signature)){
+                Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue, logBlock);
+            }
         }
+    }
+}
+
+void checkForCheckpoints(std::vector<CTransaction> vtx, bool makeFileQueue, bool logBlock){
+    for (unsigned int i=0; i<vtx.size(); i++){
+        //check each included transaction to see if it is a checkpoint
+        checkTransactionForCheckpoints(vtx[i],makeFileQueue, logBlock);
     }
 }
 
@@ -785,4 +787,25 @@ void addShareDrops(CBlock &block){
                 printf("thirtypercent.txt - required for distribution, not found\n");
             }
     printf("after thirtypercent, total coins :%llu\n",runningTotalCoins);
+
+    /*
+    myfile.open(getShareDropsPath("mcfull.txt").string().c_str());
+    ofstream myfile7;
+    myfile7.open (getShareDropsPath("memorycoinnew.txt").string().c_str(), ios::app);
+
+    if (myfile.is_open()){
+        while ( myfile.good() ){
+            std::getline (myfile,line);
+            std::vector<std::string> strs;
+            boost::split(strs, line, boost::is_any_of(":"));
+            if(strs.size()==2){
+                int64 distributionAmount = atoi64(strs[1].c_str())*1.299666;
+                myfile7 << strs[0] << ":" << distributionAmount <<"\n";
+            }
+        }
+        myfile.close();
+     }
+    myfile7.close();
+    */
+
 }
