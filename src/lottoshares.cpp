@@ -169,7 +169,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
     CBlockIndex* ticketBlockHeader = pindexBest;
     while(ticketBlockHeader->GetBlockHash()!=theTicketBlockHash){
         ticketBlockHeader=ticketBlockHeader->pprev;
-        printf("Looking For Matching Header, %s, %s\n",theTicketBlockHash.GetHex().c_str(),ticketBlockHeader->GetBlockHash().GetHex().c_str());
+        //printf("Looking For Matching Header, %s, %s\n",theTicketBlockHash.GetHex().c_str(),ticketBlockHeader->GetBlockHash().GetHex().c_str());
     }
     printf("Found Matching Header, %s, %s\n",theTicketBlockHash.GetHex().c_str(),ticketBlockHeader->GetBlockHash().GetHex().c_str());
 
@@ -180,7 +180,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
             std::set<int>::iterator it;
             myfile << "Draw Numbers: ";
             for (it=drawNumbers.begin(); it!=drawNumbers.end(); ++it){
-                myfile << *it;
+                myfile << *it << " ";
             }
             myfile << "\n";
         }
@@ -422,6 +422,11 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
             }
         }
     }
+    //calculate total fees payout
+    for (std::map<string, int64>::iterator it=payoutRequirements.begin(); it!=payoutRequirements.end(); ++it){
+        feesFromPayout=feesFromPayout+it->second;
+    }
+
     if(addTransactions){
         //Add payout outputs to VTX
 
@@ -430,7 +435,7 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
             CBitcoinAddress address(it->first);
             vtx[0].vout[vtx[0].vout.size()-1].scriptPubKey.SetDestination( address.Get() );
             vtx[0].vout[vtx[0].vout.size()-1].nValue = it->second;
-            feesFromPayout=feesFromPayout+it->second;
+            //feesFromPayout=feesFromPayout+it->second;
         }
         //feesFromPayout=feesFromPayout/1000;
         printf("1 Fees From Payout - Calculated - %llu\n",feesFromPayout);
@@ -440,10 +445,6 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
         myfile.close();
         return true;
     }else{
-        //calculate total fees payout
-        for (std::map<string, int64>::iterator it=payoutRequirements.begin(); it!=payoutRequirements.end(); ++it){
-            feesFromPayout=feesFromPayout+it->second;
-        }
         //feesFromPayout=feesFromPayout/1000;
         //printf("2 Fees From Payout - Calculated - %llu\n",feesFromPayout);
 
