@@ -540,23 +540,29 @@ void writeLogInfoForBlock(uint256 logBlockHash){
     for(int j=0;j<ticketBlock.vtx[0].vout.size();j++){
         coinbaseAward+=ticketBlock.vtx[0].vout[j].nValue;
     }
-
-    myfile << "----------------------------------------------" << "\n";
-    myfile << "Block:" << ticketBlockHeader->nHeight << "\n";
-    myfile << "Revenue" << "\n";
-    myfile << "Gross Revenue (Ticket sales):" << ticketIncome << "\n\n";
-    myfile << "Expenses:" << "\n";
-    myfile << "Prizes:" << feesFromPayout << "\n";
+    double dcoin=100000000.0;
+    myfile << "--------------------------------------------------------" << "\n";
+    myfile << "          - INCOME STATEMENT LOTTOSHARES DAC -" << "\n";
+    myfile << "                       Block:" << ticketBlockHeader->nHeight << "\n";
+    myfile << setiosflags(ios::right) << resetiosflags(ios::left) << setw(36) << "" << "     LTS" << setw(12) << "     LTS" << "\n";
+    myfile << setiosflags(ios::right) << resetiosflags(ios::left) << setw(35) << "" << "    Debit" << setw(12) << "    Credit" << "\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "Revenues:" << "\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "Gross Revenues (Ticket sales)" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(24) << setiosflags(ios::fixed) << setprecision(2) << ticketIncome/dcoin << "\n";
+    myfile << setiosflags(ios::right) << resetiosflags(ios::left) << setw(57) << "-----------\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "Expenses:" << "\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Prizes" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << setprecision(2) << feesFromPayout/dcoin << "\n";
     int64 paymentCommissions=feesFromPayout*PRIZEPAYMENTCOMMISSIONS;
-    myfile << "Prize Payment Commissions:" << paymentCommissions << "\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Prize Payment Commissions" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << setprecision(2) << paymentCommissions/dcoin << "\n";
     int64 ticketCommissions=ticketIncome*TICKETCOMMISSIONRATE;
-    myfile << "Ticket Commissions:" << ticketCommissions << "\n";
-    myfile << "Subsidy Allowed:" << subsidyAllowed << "\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Ticket Commissions" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << setprecision(2) << ticketCommissions/dcoin << "\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Subsidy Allowed" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << setprecision(2) << subsidyAllowed/dcoin << "\n";
     int64 totalAllowed = feesFromPayout + feesFromPayout*PRIZEPAYMENTCOMMISSIONS + ticketIncome*TICKETCOMMISSIONRATE + subsidyAllowed;
     int64 processorDeficit = totalAllowed - coinbaseAward;
-    myfile << "Processor Deficit:(" << processorDeficit << ")\n";
-    myfile << "Total Expenses:(" << coinbaseAward << ")\n\n";
-    myfile << "Net Income:" << ticketIncome-coinbaseAward << "\n\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Processor Deficit" << "(" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(11) << setiosflags(ios::fixed) << setprecision(2) << processorDeficit/dcoin << ")\n";
+    myfile << setiosflags(ios::right) << resetiosflags(ios::left) << setw(57) << "-----------\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(44) << "    Total Expenses             " << setiosflags(ios::right) << resetiosflags(ios::left) <<"("<< setw(11) << setiosflags(ios::fixed) << setprecision(2) << coinbaseAward/dcoin << ")\n";
+    myfile << setiosflags(ios::right) << resetiosflags(ios::left) << setw(57) << "-----------\n";
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "Net Income" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(24) << setiosflags(ios::fixed) << setprecision(2) << (ticketIncome-coinbaseAward)/dcoin << "\n\n";
     myfile.close();
 }
 
