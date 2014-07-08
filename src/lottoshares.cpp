@@ -170,6 +170,10 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
     while(ticketBlockHeader->GetBlockHash()!=theTicketBlockHash){
         ticketBlockHeader=ticketBlockHeader->pprev;
         //printf("Looking For Matching Header, %s, %s\n",theTicketBlockHash.GetHex().c_str(),ticketBlockHeader->GetBlockHash().GetHex().c_str());
+        if(ticketBlockHeader==NULL){
+            printf("Warning: This shouldn't happen! Can't find the ticket block when looking to calculate amount for prize payouts.\n");
+            return;
+        }
     }
     printf("Found Matching Header, %s, %s\n",theTicketBlockHash.GetHex().c_str(),ticketBlockHeader->GetBlockHash().GetHex().c_str());
 
@@ -503,17 +507,22 @@ void writeLogInfoForBlock(uint256 logBlockHash){
 
     std::map<string, int64> logPayouts;
     std::set<int> emptyNumberSet;
-    //Valid tickets
-    //Tickets played
-    calculatePayoutRequirements(logPayouts,logBlockHash, emptyNumberSet, true);
-
 
     //Get the block
     CBlockIndex* ticketBlockHeader = pindexBest;
     while(ticketBlockHeader->GetBlockHash()!=logBlockHash){
         ticketBlockHeader=ticketBlockHeader->pprev;
-        //printf("Looking For Matching Header, %s, %s\n",theTicketBlockHash.GetHex().c_str(),ticketBlockHeader->GetBlockHash().GetHex().c_str());
+        //Sometimes the block cannot be found - return in this case
+        if(ticketBlockHeader==NULL){return;}
     }
+
+    //Valid tickets
+    //Tickets played
+    calculatePayoutRequirements(logPayouts,logBlockHash, emptyNumberSet, true);
+
+
+
+
 
     CBlock ticketBlock;
     ticketBlock.ReadFromDisk(ticketBlockHeader);
