@@ -503,6 +503,7 @@ int64 calculateTicketIncome(std::vector<CTransaction> vtx){
     return totalStake;
 }
 
+int64 static availableSupply = 4000000000000000;
 void writeLogInfoForBlock(uint256 logBlockHash){
 
     std::map<string, int64> logPayouts;
@@ -572,7 +573,19 @@ void writeLogInfoForBlock(uint256 logBlockHash){
     myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(44) << "    Total Expenses             " << setiosflags(ios::right) << resetiosflags(ios::left) <<"("<< setw(11) << setiosflags(ios::fixed) << setprecision(2) << coinbaseAward/dcoin << ")\n";
     myfile << setiosflags(ios::right) << resetiosflags(ios::left) << setw(57) << "-----------\n";
     myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "Net Income" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(24) << setiosflags(ios::fixed) << setprecision(2) << (ticketIncome-coinbaseAward)/dcoin << "\n\n";
+    availableSupply-=ticketIncome;
+    availableSupply+=coinbaseAward;
+    myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "Total Available Supply" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(24) << setiosflags(ios::fixed) << setprecision(2) << (availableSupply)/dcoin << "\n\n";
+
     myfile.close();
+
+
+    ofstream myfile2;
+    myfile2.open ((GetDataDir() / "available-supply.txt").string().c_str(), ios::trunc);
+    myfile2 << availableSupply/dcoin;
+    myfile2.close();
+
+
 }
 
 string convertAddress(const char address[], char newVersionByte){
