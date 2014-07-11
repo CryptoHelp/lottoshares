@@ -582,7 +582,7 @@ void writeLogInfoForBlock(uint256 logBlockHash){
 
     ofstream myfile2;
     myfile2.open ((GetDataDir() / "available-supply.txt").string().c_str(), ios::trunc);
-    myfile2 << availableSupply/dcoin;
+    myfile2 << setiosflags(ios::fixed) << setprecision(2) << availableSupply/dcoin;
     myfile2.close();
 
 
