@@ -442,7 +442,7 @@ void TransactionView::focusTransaction(const QModelIndex &idx)
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     QString hash = selection.at(0).data(TransactionTableModel::TheHashRole).toString();
-    std::string url="http://lottoshares.42tx.com/ticket/"+hash.toStdString();
+    std::string url="http://lottoshares.42tx.com/tx/"+hash.toStdString();
     printf("theurl:%s\n",url.c_str());
     QDesktopServices::openUrl(QUrl(QString::fromStdString(url), QUrl::TolerantMode));
 }
