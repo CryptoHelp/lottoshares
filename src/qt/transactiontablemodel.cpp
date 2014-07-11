@@ -570,7 +570,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case LongDescriptionRole:
         return priv->describe(rec);
     case TheHashRole:
-        return QString::fromStdString(rec->getTxID());
+        return QString::fromStdString(rec->hash.ToString());
     case AddressRole:
         return QString::fromStdString(rec->address);
     case LabelRole:
