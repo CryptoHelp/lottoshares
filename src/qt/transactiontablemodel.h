@@ -37,6 +37,8 @@ public:
         DateRole,
         /** Long description (HTML format) */
         LongDescriptionRole,
+        /** TXID */
+        TheHashRole,
         /** Address of transaction */
         AddressRole,
         /** Label of address related to transaction */

@@ -72,9 +72,11 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     addWidget(sendCoinsPage);
     addWidget(voteCoinsPage);
 
-    // Clicking on a transaction on the overview page simply sends you to transaction history page
-    connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
+    // Clicking on a transaction on the overview page simply sends you to web page with transaction
+    //connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
+
+    connect(overviewPage, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
 
     // Double-clicking on a transaction on the transaction history page shows details
     connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));

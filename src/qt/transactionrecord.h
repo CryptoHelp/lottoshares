@@ -70,7 +70,8 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        LotteryTicket
     };
 
     /** Number of confirmation needed for transaction */

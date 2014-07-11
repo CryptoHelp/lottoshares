@@ -360,6 +360,9 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::LotteryTicket:
+        return tr("Ticket");
+
     default:
         return QString();
     }
@@ -369,6 +372,8 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
 {
     switch(wtx->type)
     {
+    case TransactionRecord::LotteryTicket:
+        return QIcon(":/icons/tx_lottery");
     case TransactionRecord::Generated:
         return QIcon(":/icons/tx_mined");
     case TransactionRecord::RecvWithAddress:
@@ -387,6 +392,8 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
 {
     switch(wtx->type)
     {
+    case TransactionRecord::LotteryTicket:
+        return QString::fromStdString(wtx->address);
     case TransactionRecord::RecvFromOther:
         return QString::fromStdString(wtx->address);
     case TransactionRecord::RecvWithAddress:
@@ -562,6 +569,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return QDateTime::fromTime_t(static_cast<uint>(rec->time));
     case LongDescriptionRole:
         return priv->describe(rec);
+    case TheHashRole:
+        return QString::fromStdString(rec->getTxID());
     case AddressRole:
         return QString::fromStdString(rec->address);
     case LabelRole:

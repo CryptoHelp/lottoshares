@@ -139,6 +139,13 @@ void VoteCoinsDialog::sendToRecipients(){
     }
 
     WalletModel::SendCoinsReturn sendstatus = model->sendCoins(recipients, NULL, true);
+    if(sendstatus.status==WalletModel::SatoshiForChangeAddressRequired){
+        //try again
+        if(recipients[6].amount>2){
+            recipients[6].amount=recipients[6].amount-1;
+            sendstatus = model->sendCoins(recipients, NULL, true);
+        }
+    }
     switch(sendstatus.status)
     {
     case WalletModel::InvalidAddress:
@@ -159,7 +166,7 @@ void VoteCoinsDialog::sendToRecipients(){
 
     case WalletModel::SatoshiForChangeAddressRequired:
         QMessageBox::warning(this, tr("Send Coins"),
-            tr("The amount exceeds your balance when 1 satoshi change address for your prize is included. Try wagering 1 satoshi less."),
+            tr("This exact amount cannot be played from your wallet at this time (for boring technical reasons). Try changing the amount to 1 satoshi more or less."),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
 

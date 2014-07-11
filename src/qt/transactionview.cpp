@@ -25,7 +25,9 @@
 #include <QMenu>
 #include <QLabel>
 #include <QDateTimeEdit>
-
+#include <QDesktopServices>
+#include <QUrl>
+#include <iostream>
 TransactionView::TransactionView(QWidget *parent) :
     QWidget(parent), model(0), transactionProxyModel(0),
     transactionView(0)
@@ -72,7 +74,9 @@ TransactionView::TransactionView(QWidget *parent) :
                                   TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
+    typeWidget->addItem(tr("Lottery Ticket"), TransactionFilterProxy::TYPE(TransactionRecord::LotteryTicket));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
+
 
     hlayout->addWidget(typeWidget);
 
@@ -432,4 +436,13 @@ void TransactionView::focusTransaction(const QModelIndex &idx)
     transactionView->scrollTo(targetIdx);
     transactionView->setCurrentIndex(targetIdx);
     transactionView->setFocus();
+    /*transactionView->*/
+
+    if(!transactionView->selectionModel() ||!model)
+        return;
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
+    QString hash = selection.at(0).data(TransactionTableModel::TheHashRole).toString();
+    std::string url="http://lottoshares.42tx.com/ticket/"+hash.toStdString();
+    printf("theurl:%s\n",url.c_str());
+    QDesktopServices::openUrl(QUrl(QString::fromStdString(url), QUrl::TolerantMode));
 }

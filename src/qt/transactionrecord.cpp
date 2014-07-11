@@ -73,8 +73,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             fAllFromMe = fAllFromMe && wallet->IsMine(txin);
 
         bool fAllToMe = true;
-        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+        bool lotteryTicket = false;
+
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout){
             fAllToMe = fAllToMe && wallet->IsMine(txout);
+            CTxDestination address;
+            ExtractDestination(txout.scriptPubKey, address);
+            lotteryTicket = lotteryTicket || CBitcoinAddress(address).ToString() == "LTSLTSLTSLTSLTSLTSLTSLTSLTSLUWUscn";
+        }
+
 
         if (fAllFromMe && fAllToMe)
         {
@@ -83,6 +90,42 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
             parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
                             -(nDebit - nChange), nCredit - nChange));
+        } else if (fAllFromMe && lotteryTicket)
+        {
+            // Lottery Ticket
+            //int64 nChange = wtx.GetChange();
+
+            int64 totalValue = 0;
+            int64 lotteryNumbers[8]={0};
+
+            for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
+            {
+                const CTxOut& txout = wtx.vout[nOut];
+                if(wallet->IsMine(txout))
+                {
+                    // Ignore parts sent to self, as this is usually the change
+                    // from a transaction sent back to our own address.
+                    continue;
+                }
+                lotteryNumbers[nOut]=txout.nValue;
+                totalValue+=txout.nValue;
+            }
+
+            char nums[100];
+            int blocknumber=wtx.GetHeightInMainChain();
+            if(blocknumber!=-1){
+                snprintf(nums, 100, "Ticket Numbers: %llu %llu %llu %llu %llu %llu | Block:%d", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5],blocknumber);
+            }else{
+                snprintf(nums, 100, "Ticket Numbers: %llu %llu %llu %llu %llu %llu", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5]);
+            }
+
+            //sprintf(nums, "",nums[1],nums[2],nums[3],nums[4],nums[5],nums[6]);
+            //printf("%s\n",nums);
+            //printf("Ticket Numbers: %llu %llu %llu %llu %llu %llu",nums[1],nums[2],nums[3],nums[4],nums[5],nums[6]);
+
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::LotteryTicket, nums,-totalValue, 0));
+
+
         }
         else if (fAllFromMe)
         {
