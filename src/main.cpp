@@ -1821,10 +1821,10 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
         return state.DoS(100, error("ConnectBlock() : coinbase not making payouts correctly.\n"));
     }
     nFees=nFees+feesFromPayout;
-    nFees=nFees+feesFromPayout*PRIZEPAYMENTCOMMISSIONS;
+    nFees=nFees+(feesFromPayout>>PRIZEPAYMENTCOMMISSIONS);
 
     //1% commission
-    nFees=nFees+(calculateTicketIncome(vtx)*TICKETCOMMISSIONRATE);
+    nFees=nFees+(calculateTicketIncome(vtx)>>TICKETCOMMISSIONRATE);
 
     unsigned int theNBits=bnProofOfWorkLimit.GetCompact();
     if(pindex->nHeight>0){
@@ -4693,9 +4693,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         //This adds the required payouts if the block includes a payout transaction
         checkForPayouts(pblock->vtx,feesFromPayout,true,false);
 
-        nFees=nFees+feesFromPayout/1000;
+        nFees=nFees+(feesFromPayout>>PRIZEPAYMENTCOMMISSIONS);
 
-        nFees=nFees+(calculateTicketIncome(pblock->vtx)*TICKETCOMMISSIONRATE);
+        nFees=nFees+(calculateTicketIncome(pblock->vtx)>>TICKETCOMMISSIONRATE);
 
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
@@ -4911,8 +4911,8 @@ void static ScryptMiner(CWallet *pwallet)
     unsigned int nExtraNonce = 0;
 
     try { loop {
-        //while (vNodes.empty())
-        //    MilliSleep(1000);
+        while (vNodes.empty())
+            MilliSleep(1000);
 
         //
         // Create new block

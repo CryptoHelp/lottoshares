@@ -26,8 +26,8 @@ class CAuxPow;
 
 struct CBlockIndexWorkComparator;
 
-static const double TICKETCOMMISSIONRATE = 0.01;
-static const double PRIZEPAYMENTCOMMISSIONS = 0.001;
+static const int TICKETCOMMISSIONRATE = 7; //1/128
+static const int PRIZEPAYMENTCOMMISSIONS = 10; //1/1024
 
 /** Allow for extra large genesis block */
 static const unsigned int GENESIS_MAX_BLOCK_SIZE = 150*1000000;                      // 150*1000KB block limit

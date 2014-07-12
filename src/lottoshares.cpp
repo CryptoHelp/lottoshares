@@ -269,13 +269,14 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
                     printf("Matching Number %d\n",matchingNumber);
 
                     int64 prize=0;
-                    if(matchingNumber==0){
+                    /*if(matchingNumber==0){
                         prize=stake/10;
                     }else if(matchingNumber==1){
                         prize=stake/100;
                     }else if(matchingNumber==2){
                         prize=stake*1;
-                    }else if(matchingNumber==3){
+                    }else*/
+                    if(matchingNumber==3){
                         prize=stake*10;
                     }else if(matchingNumber==4){
                         prize=stake*100;
@@ -561,12 +562,12 @@ void writeLogInfoForBlock(uint256 logBlockHash){
     myfile << setiosflags(ios::right) << resetiosflags(ios::left) << setw(57) << "-----------\n";
     myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "Expenses:" << "\n";
     myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Prizes" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << setprecision(2) << feesFromPayout/dcoin << "\n";
-    int64 paymentCommissions=feesFromPayout*PRIZEPAYMENTCOMMISSIONS;
+    int64 paymentCommissions=feesFromPayout >> PRIZEPAYMENTCOMMISSIONS;
     myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Prize Payment Commissions" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << setprecision(2) << paymentCommissions/dcoin << "\n";
-    int64 ticketCommissions=ticketIncome*TICKETCOMMISSIONRATE;
+    int64 ticketCommissions=ticketIncome >> TICKETCOMMISSIONRATE;
     myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Ticket Commissions" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << setprecision(2) << ticketCommissions/dcoin << "\n";
     myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Subsidy Allowed" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << setprecision(2) << subsidyAllowed/dcoin << "\n";
-    int64 totalAllowed = feesFromPayout + feesFromPayout*PRIZEPAYMENTCOMMISSIONS + ticketIncome*TICKETCOMMISSIONRATE + subsidyAllowed;
+    int64 totalAllowed = feesFromPayout + (feesFromPayout >> PRIZEPAYMENTCOMMISSIONS) + (ticketIncome >> TICKETCOMMISSIONRATE) + subsidyAllowed;
     int64 processorDeficit = totalAllowed - coinbaseAward;
     myfile << setiosflags(ios::left) << resetiosflags(ios::right) << setw(32) << "  Processor Deficit" << "(" << setiosflags(ios::right) << resetiosflags(ios::left) << setw(11) << setiosflags(ios::fixed) << setprecision(2) << processorDeficit/dcoin << ")\n";
     myfile << setiosflags(ios::right) << resetiosflags(ios::left) << setw(57) << "-----------\n";
