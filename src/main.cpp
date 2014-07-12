@@ -25,8 +25,8 @@ using namespace boost;
 //
 
 
-uint256 hashGenesisBlock("0xaa1a97d4d50327c2b4245c685864efdda105e52349c605c71dda1ae363a8a0b8");
-uint256 merklerootGenesisBlock("0xf1e10299c8fc4e74c7472d961ea283c376848b3363704ed6a8e496e802e3fdec");
+uint256 hashGenesisBlock("0xc2c1c33f2937aabf859a16dff8f7b098500d92ba514099a69fd05eb4982c9943");
+uint256 merklerootGenesisBlock("0x1129c1d5b3dad04fd85a2057937cd915c7d96870c4c8ad81091bedcf58cbd7b1");
 static const int64 nTargetTimespan = 3.5 * 24 * 60 * 60; // LottoShares: 3.5 days
 static const int64 nTargetSpacing = 2.5 * 60; // LottoShares: 2.5 minutes
 static const int64 nInterval = nTargetTimespan / nTargetSpacing;
@@ -3055,9 +3055,9 @@ bool InitBlockIndex() {
 
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1403676171;
+        block.nTime    = 1405189717;
         block.nBits      = 0x200000FF;
-        block.nNonce   = 4031960;
+        block.nNonce   = 4299024;
 
         if (fTestNet)
         {
@@ -3070,7 +3070,7 @@ bool InitBlockIndex() {
         printf("%s\n", hash.ToString().c_str());
         printf("%s\n", hashGenesisBlock.ToString().c_str());
         printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-        assert(block.hashMerkleRoot == merklerootGenesisBlock && "Probably the sharedrop files were not found - ensure bitcoin.txt, dogecoin.txt, protoshares.txt, memorycoin.txt and angelshares.txt are present in your current directory.");
+        assert(block.hashMerkleRoot == merklerootGenesisBlock);
         //block.print(); //It's too big!
         assert(hash == hashGenesisBlock);
 
