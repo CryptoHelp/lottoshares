@@ -25,8 +25,8 @@ using namespace boost;
 //
 
 
-uint256 hashGenesisBlock("0xc2c1c33f2937aabf859a16dff8f7b098500d92ba514099a69fd05eb4982c9943");
-uint256 merklerootGenesisBlock("0x1129c1d5b3dad04fd85a2057937cd915c7d96870c4c8ad81091bedcf58cbd7b1");
+uint256 hashGenesisBlock("0xe38a6967b75082e02a052ced8722dfd5998f57f28eae39ed82e1adff143db1cd");
+uint256 merklerootGenesisBlock("0xa2331ec870e1be5e8701540efa5d7b33cdddd03badd76e9994c214432c400d4c");
 static const int64 nTargetTimespan = 3.5 * 24 * 60 * 60; // LottoShares: 3.5 days
 static const int64 nTargetSpacing = 2.5 * 60; // LottoShares: 2.5 minutes
 static const int64 nInterval = nTargetTimespan / nTargetSpacing;
@@ -3045,7 +3045,6 @@ bool InitBlockIndex() {
         CBlock block;
         block.hashPrevBlock = 0;
 
-        char* pszTimestamp = "You probably wouldn't be interested in this.";
 
         //txNew.vout.resize(1);
         //txNew.vout[0].nValue = 50 * COIN;
@@ -3055,9 +3054,9 @@ bool InitBlockIndex() {
 
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.nVersion = 1;
-        block.nTime    = 1405189717;
+        block.nTime    = 1405288888;
         block.nBits      = 0x200000FF;
-        block.nNonce   = 4299024;
+        block.nNonce   = 1968015677;
 
         if (fTestNet)
         {
