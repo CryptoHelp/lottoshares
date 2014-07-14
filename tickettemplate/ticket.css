@@ -1,0 +1,32 @@
+.ticket{
+background-image:url(ticketbackdrop.jpg);
+-moz-background-size:100% 100%;
+-webkit-background-size:100% 100%;
+background-size:100% 100%;
+height:485px;
+width:300px;
+font-family: 'VT323';
+text-rendering: optimizeLegibility !important;
+-webkit-font-smoothing: antialiased !important;
+}
+
+.titlesize{
+	font-size: 36pt;
+}
+
+.taglinesize{
+	font-size: 11pt;
+	text-transform:uppercase;
+}
+
+.adsize{
+	text-transform:uppercase;
+}
+
+.numbersize{
+	font-size:24;
+}
+
+.trxid{
+	font-size:10;
+}
