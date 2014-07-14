@@ -1,5 +1,3 @@
-Currenty undergoing testing period. Blockchain due for reset July 8th 2014
-
 LottoShares integration/staging tree
 ================================
 
