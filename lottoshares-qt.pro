@@ -454,7 +454,7 @@ macx:QMAKE_INFO_PLIST = share/qt/Info.plist
 
 macx {
     sharedrop.path = Contents
-    sharedrop.files = release/angelshares.txt release/bitcoin.txt release/dogecoin.txt release/memorycoin.txt release/protoshares.txt release/thirtypercent.txt
+    sharedrop.files = release/angelshares.txt release/bitcoin.txt release/dogecoin.txt release/memorycoin.txt release/protoshares.txt release/thirtypercent.txt release/thirtypercent2.txt
 
     QMAKE_BUNDLE_DATA += sharedrop
 }
