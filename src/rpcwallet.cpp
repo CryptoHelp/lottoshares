@@ -695,7 +695,7 @@ Value sendmany(const Array& params, bool fHelp)
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid LottoShares address: ")+s.name_);
 
-        //Necessary for lottery ticket to send multiple outputs to single address
+        // Necessary for lottery ticket to send multiple outputs to single address
         //if (setAddress.count(address))
         //    throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
         setAddress.insert(address);
