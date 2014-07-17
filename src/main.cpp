@@ -2602,6 +2602,14 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         }
         while(!checkpointConsistencyCheck());
 
+        //Clear out orphan blocks - try to receive valid block again
+        // orphan blocks
+        std::map<uint256, CBlock*>::iterator it2 = mapOrphanBlocks.begin();
+        for (; it2 != mapOrphanBlocks.end(); it2++)
+            delete (*it2).second;
+        mapOrphanBlocks.clear();
+        mapOrphanBlocksByPrev.clear();
+
         return error("ProcessBlock() : Checkpoint consistency FAILED");
     }
 
