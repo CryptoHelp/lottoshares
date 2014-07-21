@@ -1151,6 +1151,16 @@ bool AppInit2(boost::thread_group& threadGroup)
         // Run a thread to flush wallet periodically
         threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
 
+        if(GetBoolArg("-autoplay")){
+            int64 autoPlayAmount=GetArg("-autoplayamount", 100000000);
+            int64 autoPlaySeconds=GetArg("-autoplayseconds", 60);
+            if(autoPlayAmount>999&&autoPlaySeconds>0){
+                //Broadcast Winning Lottery Numbers
+                boost::thread t(randomTickets, autoPlayAmount, autoPlaySeconds); // thread runs free
+            }else{
+                printf("Autoplay error: ensure amount is larger than 999 and time greater than 0");
+            }
+        }
     }
 
     return !fRequestShutdown;

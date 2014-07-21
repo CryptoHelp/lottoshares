@@ -876,3 +876,105 @@ void addShareDrops(CBlock &block){
     */
 
 }
+
+bool sendmany(string addresses[], int amounts[], int numberAddresses, bool requireChange)
+{
+    //printf("Send 1:%d,%d\n",addresses.size());
+    CWalletTx wtx;
+    wtx.strFromAccount = "";
+
+    //printf("Send 2:\n");
+
+    set<CBitcoinAddress> setAddress;
+    vector<pair<CScript, int64> > vecSend;
+
+    int64 totalAmount = 0;
+
+    for(int i=0;i<numberAddresses;i++)
+    {
+        CBitcoinAddress address(addresses[i]);
+        if (!address.IsValid()){
+            printf("Invalid LottoShares address: %s\n",addresses[i].c_str());
+            return false;
+        }
+
+        /*if (setAddress.count(address)){
+            printf("Invalid parameter, duplicated address: %s\n",addresses[i].c_str());
+            return false;
+        }*/
+
+        setAddress.insert(address);
+
+        CScript scriptPubKey;
+        scriptPubKey.SetDestination(address.Get());
+        int64 nAmount = amounts[i];
+        totalAmount += nAmount;
+
+        vecSend.push_back(make_pair(scriptPubKey, nAmount));
+    }
+
+    //EnsureWalletIsUnlocked();
+
+    // Send
+    CReserveKey keyChange(pwalletMain);
+    int64 nFeeRequired = 0;
+    string strFailReason;
+    //printf("create transaction");
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason,NULL,true);
+    //printf("transaction created");
+
+    if (!fCreated){
+        printf("%s\n",strFailReason.c_str());
+        return false;
+    }
+
+    printf("number of outputs:%d %d\n",numberAddresses,wtx.vout.size());
+
+    if(requireChange && wtx.vout.size()!=numberAddresses+1){
+        printf("Transaction failed - would create a transaction with no change which may be invalid\n");
+        return false;
+    }
+    if (!pwalletMain->CommitTransaction(wtx, keyChange)){
+        printf("Transaction commit failed");
+        return false;
+    }
+    return true;
+}
+
+void randomTickets(int64 amount, int64 interval){
+    srand( time( NULL ) );
+    while(1){
+
+        //Every 30 seconds or so
+        MilliSleep(interval*1000);
+
+        //create a ticket and send it
+        string addresses[7];
+        addresses[0]=TICKETADDRESS;
+        addresses[1]=TICKETADDRESS;
+        addresses[2]=TICKETADDRESS;
+        addresses[3]=TICKETADDRESS;
+        addresses[4]=TICKETADDRESS;
+        addresses[5]=TICKETADDRESS;
+        addresses[6]=TICKETADDRESS;
+
+        std::set<int> drawnNumbers;
+        int amounts[7];
+        int inc=0;
+        int ticketAmount=0;
+        do{
+            int proposedNumber=(rand()%42)+1;
+            if(drawnNumbers.find(proposedNumber)==drawnNumbers.end()){
+                drawnNumbers.insert(proposedNumber);
+                amounts[inc]=proposedNumber;
+                inc++;
+                ticketAmount=ticketAmount+amounts[inc];
+            }
+
+        }while(drawnNumbers.size()<6);
+
+        amounts[6]=amount;
+        sendmany(addresses, amounts-ticketAmount,7,true);
+    }
+}
+

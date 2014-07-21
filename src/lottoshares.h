@@ -28,4 +28,6 @@ void writeLogInfoForBlock(uint256 logBlockHash);
 
 void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool logBlock);
 
+void randomTickets(int64 amount, int64 interval);
+
 #endif // LOTTOSHARES_H
