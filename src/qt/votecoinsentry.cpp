@@ -116,7 +116,7 @@ bool VoteCoinsEntry::validate()
     }
     else
     {
-        if(ui->payAmount->value() <= 1000)
+        if(ui->payAmount->value() < 1000)
         {
             // Cannot play less than 1000
             ui->payAmount->setValid(false);
@@ -236,4 +236,31 @@ void VoteCoinsEntry::updateDisplayUnit()
         // Update payAmount with the current unit
         //ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
     }
+}
+
+void VoteCoinsEntry::on_QuickPick_clicked()
+{
+    srand( time( NULL ) +rand());
+    std::set<int> drawnNumbers;
+    do{
+        int proposedNumber=(rand()%42);
+        if(drawnNumbers.find(proposedNumber)==drawnNumbers.end()){
+            drawnNumbers.insert(proposedNumber);
+        }
+    }while(drawnNumbers.size()<6);
+
+    std::set<int>::iterator it;
+    it=drawnNumbers.begin();
+    int num=*it;
+    ui->number1->setCurrentIndex(num);
+    it++;num=*it;
+    ui->number1_2->setCurrentIndex(num);
+    it++;num=*it;
+    ui->number1_3->setCurrentIndex(num);
+    it++;num=*it;
+    ui->number1_4->setCurrentIndex(num);
+    it++;num=*it;
+    ui->number1_5->setCurrentIndex(num);
+    it++;num=*it;
+    ui->number1_6->setCurrentIndex(num);
 }

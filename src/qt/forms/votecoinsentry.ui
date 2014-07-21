@@ -1366,6 +1366,13 @@
    <item row="3" column="13">
     <widget class="BitcoinAmountField" name="payAmount"/>
    </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="QuickPick">
+     <property name="text">
+      <string>Quick Pick</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>

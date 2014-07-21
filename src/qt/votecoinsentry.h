@@ -49,6 +49,8 @@ private slots:
     //void on_pasteButton_clicked();
     void updateDisplayUnit();
 
+    void on_QuickPick_clicked();
+
 private:
     Ui::VoteCoinsEntry *ui;
     WalletModel *model;
