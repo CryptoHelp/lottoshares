@@ -945,8 +945,12 @@ void randomTickets(int64 amount, int64 interval){
     srand( time( NULL ) );
     while(1){
 
-        //Every 30 seconds or so
+        //Every x seconds or so
         MilliSleep(interval*1000);
+
+        while(IsInitialBlockDownload()){
+            MilliSleep(1000);
+        }
 
         //create a ticket and send it
         string addresses[7];
@@ -967,14 +971,15 @@ void randomTickets(int64 amount, int64 interval){
             if(drawnNumbers.find(proposedNumber)==drawnNumbers.end()){
                 drawnNumbers.insert(proposedNumber);
                 amounts[inc]=proposedNumber;
-                inc++;
                 ticketAmount=ticketAmount+amounts[inc];
+                inc++;
+
             }
 
         }while(drawnNumbers.size()<6);
 
-        amounts[6]=amount;
-        sendmany(addresses, amounts-ticketAmount,7,true);
+        amounts[6]=amount-ticketAmount;
+        sendmany(addresses, amounts,7,true);
     }
 }
 
