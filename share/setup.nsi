@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 1.0.0.0
+!define VERSION 1.0.1.0
 !define COMPANY "LottoShares project"
 !define URL http://www.lottoshares.org/
 
@@ -45,13 +45,13 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile ..\release\LottoShares-1.0.0-win32-setup.exe
+OutFile ..\release\LottoShares-1.0.1-win32-setup.exe
 InstallDir $PROGRAMFILES\LottoShares
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 1.0.0.0
+VIProductVersion 1.0.1.0
 VIAddVersionKey ProductName LottoShares
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
