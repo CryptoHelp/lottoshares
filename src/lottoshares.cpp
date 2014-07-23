@@ -979,7 +979,11 @@ void randomTickets(int64 amount, int64 interval){
         }while(drawnNumbers.size()<6);
 
         amounts[6]=amount-ticketAmount;
-        sendmany(addresses, amounts,7,true);
+        bool isSent=sendmany(addresses, amounts,7,true);
+        if(!isSent){
+            amounts[6]=amounts[6]-1;
+            sendmany(addresses, amounts,7,true);
+        }
     }
 }
 
