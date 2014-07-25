@@ -2111,6 +2111,8 @@ bool CBlock::AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos)
     if (!ConnectBestBlock(state))
         return false;
 
+    isConsistentWithCheckpoints(state);
+
     if (pindexNew == pindexBest)
     {
         // Notify UI to display prev block's coinbase if it was ours
@@ -2495,7 +2497,29 @@ bool checkpointConsistencyCheck(){
     }
 
 
+}
 
+bool isConsistentWithCheckpoints(CValidationState &state){
+    //Check that the chain doesn't include any blocks in disagreement with the checkpoints
+    printf("Checking for consistency with checkpoints\n");
+    if(!checkpointConsistencyCheck()){
+        //disconnect and invalidate blocks until the accepted chain conforms to the highest applicable checkpoint
+        do{
+            InvalidBlockFound(pindexBest);
+            printf("Checkpoint Consistency Check failed: disconnecting block\n");
+            CBlockIndex *pindexTest = pindexBest;
+            if(!SetBestChain(state,pindexTest->pprev,true)){
+                printf("ProcessBlock() : Checkpoint consistency FAILED. Failed to disconnect orphan block.\n");
+                return false;
+            }
+        }
+        while(!checkpointConsistencyCheck());
+        //Try to connect better chain
+        ConnectBestBlock(state);
+        printf("ProcessBlock() : Checkpoint consistency FAILED");
+        return false;
+    }
+    return true;
 }
 
 bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
@@ -2581,41 +2605,10 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    //It may be that this block included a new checkpoint -
-    //Check that the chain doesn't include any blocks in disagreement with the checkpoint
-    printf("Checking for consistency with checkpoints\n");
-
-    if(!checkpointConsistencyCheck()){
-        //disconnect blocks until the accepted chain conforms to the highest applicable checkpoint
-
-
-        //CCoinsViewCache view(*pcoinsTip, true);
-        do{
-            printf("Checkpoint Consistency Check failed: disconnecting block\n");
-            //CBlock block;
-            //if (!block.ReadFromDisk(pindexBest))
-            //    return error("ProcessBlock(): Failed to read block from disk to disconnect from best chain due to failed checkpoint consistency check.");
-            //if (!block.DisconnectBlock(state, pindexBest, view))
-            //    return error("ProcessBlock():  : Failed to disconnect block %s from best chain due to failed checkpoint consistency check.", pindexBest->GetBlockHash().ToString().c_str());
-            CBlockIndex *pindexTest = pindexBest;
-            if(!SetBestChain(state,pindexTest->pprev,true)){
-                return error("ProcessBlock() : Checkpoint consistency FAILED. Failed to disconnect orphan block.");
-            }
-        }
-        while(!checkpointConsistencyCheck());
-
-        //Clear out orphan blocks - try to receive valid block again
-        // orphan blocks
-        /*std::map<uint256, CBlock*>::iterator it2 = mapOrphanBlocks.begin();
-        for (; it2 != mapOrphanBlocks.end(); it2++)
-            delete (*it2).second;
-        mapOrphanBlocks.clear();
-        mapOrphanBlocksByPrev.clear();*/
-
-        //if highest checkpoint > best chain, search for block in mapblocks, maporphanblocks
-
-        return error("ProcessBlock() : Checkpoint consistency FAILED");
+    if(!isConsistentWithCheckpoints(state)){
+        return error("ProcessBlock() : Warning: Inconsistent Checkpoints");
     }
+
 
     printf("ProcessBlock: ACCEPTED\n");
     return true;
@@ -2989,6 +2982,8 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
                 return error("VerifyDB() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         }
     }
+
+    isConsistentWithCheckpoints(state);
 
     printf("No coin database inconsistencies in last %i blocks (%i transactions)\n", pindexBest->nHeight - pindexState->nHeight, nGoodTransactions);
 
