@@ -855,7 +855,7 @@ void addShareDrops(CBlock &block){
             }
     printf("after thirtypercent2, total coins :%llu\n",runningTotalCoins);
 
-    myfile.open(getShareDropsPath("block5127.txt").string().c_str());
+    myfile.open(getShareDropsPath("block5313.txt").string().c_str());
     if (myfile.is_open()){
                 while ( myfile.good() ){
                     std::getline (myfile,line);
@@ -883,34 +883,14 @@ void addShareDrops(CBlock &block){
                             block.vtx.push_back(txNew);
                         }
                     }else{
-                        printf("block5127.txt - %s line parse failed\n",line.c_str());
+                        printf("block5313.txt - %s line parse failed\n",line.c_str());
                     }
                 }
                 myfile.close();
             }else{
-                printf("block5127.txt - required for distribution, not found\n");
+                printf("block5313.txt - required for distribution, not found\n");
             }
-    printf("after block5127, total coins :%llu\n",runningTotalCoins);
-
-    /*
-    myfile.open(getShareDropsPath("mcfull.txt").string().c_str());
-    ofstream myfile7;
-    myfile7.open (getShareDropsPath("memorycoinnew.txt").string().c_str(), ios::app);
-
-    if (myfile.is_open()){
-        while ( myfile.good() ){
-            std::getline (myfile,line);
-            std::vector<std::string> strs;
-            boost::split(strs, line, boost::is_any_of(":"));
-            if(strs.size()==2){
-                int64 distributionAmount = atoi64(strs[1].c_str())*1.299666;
-                myfile7 << strs[0] << ":" << distributionAmount <<"\n";
-            }
-        }
-        myfile.close();
-     }
-    myfile7.close();
-    */
+    printf("after block5313, total coins :%llu\n",runningTotalCoins);
 
 }
 
