@@ -32,7 +32,9 @@ static const int64 nTargetSpacing = 2.5 * 60; // LottoShares: 2.5 minutes
 static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 static const int64 TWOYEARS = 2 * 365 * 24 * 24;
 static const int64 ONEYEAR =  365 * 24 * 24;
-static const int64 SIXTYDAYS =  60 * 24 * 24;
+static const int64 FIFTYDAYS =  50 * 24 * 24;
+static const int64 MAXBALANCEGENESIS =  100 * COIN;
+
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
@@ -956,10 +958,10 @@ int CMerkleTx::GetHeightInMainChain() const
 }
 
 int getVestedSharesMaturityHeight(uint256 txhash){
-    printf("hash of vested transaction:%s\n",txhash.GetHex().c_str());
+    //printf("hash of vested transaction:%s\n",txhash.GetHex().c_str());
     uint64 theHash=txhash.Get64();
     theHash=theHash+hashGenesisBlock.Get64();
-    return SIXTYDAYS + (theHash % ONEYEAR);
+    return FIFTYDAYS + (theHash % ONEYEAR);
 }
 
 int CMerkleTx::GetBlocksToMaturity() const
@@ -973,7 +975,7 @@ int CMerkleTx::GetBlocksToMaturity() const
         if(pindexBest->nHeight>TWOYEARS){
             return INT_MAX;
         }
-        if(GetValueOut()!=80*COIN && GetValueOut()!=20*COIN){
+        if(GetValueOut()>MAXBALANCEGENESIS){
             int maturationBlock = getVestedSharesMaturityHeight(this->GetHash());
             printf("maturation block:%d\n",maturationBlock);
             return maturationBlock-pindexBest->nHeight;
@@ -1519,11 +1521,11 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
                 if (nSpendHeight - coins.nHeight < COINBASE_MATURITY)
                     return state.Invalid(error("CheckInputs() : tried to spend coinbase at depth %d", nSpendHeight - coins.nHeight));
                 if (coins.nHeight==0){
-                    if(nSpendHeight>420480){
+                    if(nSpendHeight>TWOYEARS){
                         return state.Invalid(error("CheckInputs() : Trying to claim vested shares after expiry period. spend height=%d", nSpendHeight));
                     }
-                    printf("Coins Amount in Genesis Block:%d",coins.vout[prevout.n].nValue);
-                    if(coins.vout[prevout.n].nValue!=80*COIN && coins.vout[prevout.n].nValue!=20*COIN){
+                    //printf("Coins Amount in Genesis Block:%d",coins.vout[prevout.n].nValue);
+                    if(coins.vout[prevout.n].nValue>MAXBALANCEGENESIS){
                         int maturityHeight=getVestedSharesMaturityHeight(prevout.hash);
                         if(nSpendHeight<maturityHeight){
                             //Not matured yet
@@ -2604,11 +2606,13 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 
         //Clear out orphan blocks - try to receive valid block again
         // orphan blocks
-        std::map<uint256, CBlock*>::iterator it2 = mapOrphanBlocks.begin();
+        /*std::map<uint256, CBlock*>::iterator it2 = mapOrphanBlocks.begin();
         for (; it2 != mapOrphanBlocks.end(); it2++)
             delete (*it2).second;
         mapOrphanBlocks.clear();
-        mapOrphanBlocksByPrev.clear();
+        mapOrphanBlocksByPrev.clear();*/
+
+        //if highest checkpoint > best chain, search for block in mapblocks, maporphanblocks
 
         return error("ProcessBlock() : Checkpoint consistency FAILED");
     }
