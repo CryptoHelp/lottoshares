@@ -194,6 +194,8 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, b
 bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew, bool justDisconnectTopBlock = false);
 /** Find the best known block, and make it the tip of the block chain */
 bool ConnectBestBlock(CValidationState &state);
+/** Ensure current chain is consistent with received checkpoints */
+bool isConsistentWithCheckpoints(CValidationState &state);
 /** Create a new block index entry for a given block hash */
 CBlockIndex * InsertBlockIndex(uint256 hash);
 /** Verify a signature */

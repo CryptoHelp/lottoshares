@@ -32,7 +32,9 @@ static const int64 nTargetSpacing = 2.5 * 60; // LottoShares: 2.5 minutes
 static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 static const int64 TWOYEARS = 2 * 365 * 24 * 24;
 static const int64 ONEYEAR =  365 * 24 * 24;
-static const int64 SIXTYDAYS =  60 * 24 * 24;
+static const int64 FIFTYDAYS =  50 * 24 * 24;
+static const int64 MAXBALANCEGENESIS =  100 * COIN;
+
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
@@ -956,10 +958,10 @@ int CMerkleTx::GetHeightInMainChain() const
 }
 
 int getVestedSharesMaturityHeight(uint256 txhash){
-    printf("hash of vested transaction:%s\n",txhash.GetHex().c_str());
+    //printf("hash of vested transaction:%s\n",txhash.GetHex().c_str());
     uint64 theHash=txhash.Get64();
     theHash=theHash+hashGenesisBlock.Get64();
-    return SIXTYDAYS + (theHash % ONEYEAR);
+    return FIFTYDAYS + (theHash % ONEYEAR);
 }
 
 int CMerkleTx::GetBlocksToMaturity() const
@@ -973,7 +975,7 @@ int CMerkleTx::GetBlocksToMaturity() const
         if(pindexBest->nHeight>TWOYEARS){
             return INT_MAX;
         }
-        if(GetValueOut()!=80*COIN && GetValueOut()!=20*COIN){
+        if(GetValueOut()>MAXBALANCEGENESIS){
             int maturationBlock = getVestedSharesMaturityHeight(this->GetHash());
             printf("maturation block:%d\n",maturationBlock);
             return maturationBlock-pindexBest->nHeight;
@@ -1519,11 +1521,11 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
                 if (nSpendHeight - coins.nHeight < COINBASE_MATURITY)
                     return state.Invalid(error("CheckInputs() : tried to spend coinbase at depth %d", nSpendHeight - coins.nHeight));
                 if (coins.nHeight==0){
-                    if(nSpendHeight>420480){
+                    if(nSpendHeight>TWOYEARS){
                         return state.Invalid(error("CheckInputs() : Trying to claim vested shares after expiry period. spend height=%d", nSpendHeight));
                     }
-                    printf("Coins Amount in Genesis Block:%d",coins.vout[prevout.n].nValue);
-                    if(coins.vout[prevout.n].nValue!=80*COIN && coins.vout[prevout.n].nValue!=20*COIN){
+                    //printf("Coins Amount in Genesis Block:%d",coins.vout[prevout.n].nValue);
+                    if(coins.vout[prevout.n].nValue>MAXBALANCEGENESIS){
                         int maturityHeight=getVestedSharesMaturityHeight(prevout.hash);
                         if(nSpendHeight<maturityHeight){
                             //Not matured yet
@@ -2109,6 +2111,8 @@ bool CBlock::AddToBlockIndex(CValidationState &state, const CDiskBlockPos &pos)
     if (!ConnectBestBlock(state))
         return false;
 
+    isConsistentWithCheckpoints(state);
+
     if (pindexNew == pindexBest)
     {
         // Notify UI to display prev block's coinbase if it was ours
@@ -2493,7 +2497,29 @@ bool checkpointConsistencyCheck(){
     }
 
 
+}
 
+bool isConsistentWithCheckpoints(CValidationState &state){
+    //Check that the chain doesn't include any blocks in disagreement with the checkpoints
+    printf("Checking for consistency with checkpoints\n");
+    if(!checkpointConsistencyCheck()){
+        //disconnect and invalidate blocks until the accepted chain conforms to the highest applicable checkpoint
+        do{
+            InvalidBlockFound(pindexBest);
+            printf("Checkpoint Consistency Check failed: disconnecting block\n");
+            CBlockIndex *pindexTest = pindexBest;
+            if(!SetBestChain(state,pindexTest->pprev,true)){
+                printf("ProcessBlock() : Checkpoint consistency FAILED. Failed to disconnect orphan block.\n");
+                return false;
+            }
+        }
+        while(!checkpointConsistencyCheck());
+        //Try to connect better chain
+        ConnectBestBlock(state);
+        printf("ProcessBlock() : Checkpoint consistency FAILED");
+        return false;
+    }
+    return true;
 }
 
 bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
@@ -2579,39 +2605,10 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    //It may be that this block included a new checkpoint -
-    //Check that the chain doesn't include any blocks in disagreement with the checkpoint
-    printf("Checking for consistency with checkpoints\n");
-
-    if(!checkpointConsistencyCheck()){
-        //disconnect blocks until the accepted chain conforms to the highest applicable checkpoint
-
-
-        //CCoinsViewCache view(*pcoinsTip, true);
-        do{
-            printf("Checkpoint Consistency Check failed: disconnecting block\n");
-            //CBlock block;
-            //if (!block.ReadFromDisk(pindexBest))
-            //    return error("ProcessBlock(): Failed to read block from disk to disconnect from best chain due to failed checkpoint consistency check.");
-            //if (!block.DisconnectBlock(state, pindexBest, view))
-            //    return error("ProcessBlock():  : Failed to disconnect block %s from best chain due to failed checkpoint consistency check.", pindexBest->GetBlockHash().ToString().c_str());
-            CBlockIndex *pindexTest = pindexBest;
-            if(!SetBestChain(state,pindexTest->pprev,true)){
-                return error("ProcessBlock() : Checkpoint consistency FAILED. Failed to disconnect orphan block.");
-            }
-        }
-        while(!checkpointConsistencyCheck());
-
-        //Clear out orphan blocks - try to receive valid block again
-        // orphan blocks
-        std::map<uint256, CBlock*>::iterator it2 = mapOrphanBlocks.begin();
-        for (; it2 != mapOrphanBlocks.end(); it2++)
-            delete (*it2).second;
-        mapOrphanBlocks.clear();
-        mapOrphanBlocksByPrev.clear();
-
-        return error("ProcessBlock() : Checkpoint consistency FAILED");
+    if(!isConsistentWithCheckpoints(state)){
+        return error("ProcessBlock() : Warning: Inconsistent Checkpoints");
     }
+
 
     printf("ProcessBlock: ACCEPTED\n");
     return true;
@@ -2985,6 +2982,8 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
                 return error("VerifyDB() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());
         }
     }
+
+    isConsistentWithCheckpoints(state);
 
     printf("No coin database inconsistencies in last %i blocks (%i transactions)\n", pindexBest->nHeight - pindexState->nHeight, nGoodTransactions);
 

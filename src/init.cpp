@@ -1088,6 +1088,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!ConnectBestBlock(state))
         strErrors << "Failed to connect best block";
 
+    //Check best chain is consistent with checkpoints
+    isConsistentWithCheckpoints(state);
+
     std::vector<boost::filesystem::path> vImportFiles;
     if (mapArgs.count("-loadblock"))
     {

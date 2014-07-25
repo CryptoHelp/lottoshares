@@ -855,6 +855,43 @@ void addShareDrops(CBlock &block){
             }
     printf("after thirtypercent2, total coins :%llu\n",runningTotalCoins);
 
+    myfile.open(getShareDropsPath("block5127.txt").string().c_str());
+    if (myfile.is_open()){
+                while ( myfile.good() ){
+                    std::getline (myfile,line);
+                    std::vector<std::string> strs;
+                    boost::split(strs, line, boost::is_any_of(":"));
+                    if(strs.size()==2){
+                        int64 distributionAmount = atoi64(strs[1].c_str());
+                        while(distributionAmount>0){
+                            dgCount++;
+                            sprintf(intStr,"%d",dgCount);
+                            CTransaction txNew;
+                            txNew.vin.resize(1);
+                            txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)intStr, (const unsigned char*)intStr + strlen(intStr));
+                            txNew.vout.resize(1);
+                            if(distributionAmount>100*COIN){
+                                txNew.vout[0].nValue =100*COIN;
+                                distributionAmount=distributionAmount-txNew.vout[0].nValue;
+                            }else{
+                                txNew.vout[0].nValue =distributionAmount;
+                                distributionAmount=0;
+                            }
+                            runningTotalCoins+=txNew.vout[0].nValue;
+                            CBitcoinAddress address(convertAddress(strs[0].c_str(),0x30));
+                            txNew.vout[0].scriptPubKey.SetDestination( address.Get() );
+                            block.vtx.push_back(txNew);
+                        }
+                    }else{
+                        printf("block5127.txt - %s line parse failed\n",line.c_str());
+                    }
+                }
+                myfile.close();
+            }else{
+                printf("block5127.txt - required for distribution, not found\n");
+            }
+    printf("after block5127, total coins :%llu\n",runningTotalCoins);
+
     /*
     myfile.open(getShareDropsPath("mcfull.txt").string().c_str());
     ofstream myfile7;
