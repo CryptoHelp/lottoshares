@@ -206,7 +206,7 @@ namespace Checkpoints
                 if(strs.size()==3){
                     mapCheckpoints[atoi(strs[0])]=uint256(strs[1]);
                 }else{
-                    printf("hashlookup.txt - %s line parse failed\n",line.c_str());
+                    printf("checkpoints.txt - %s line parse failed\n",line.c_str());
                 }
             }
         }

@@ -2471,6 +2471,10 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
 bool checkpointConsistencyCheck(){
     //check that the currently accepted chain conforms to the highest applicable checkpoint
 
+    if(nBestHeight==0){
+        return true;
+    }
+
     int highestCheckpoint=Checkpoints::GetTotalBlocksEstimate();
     //nBestHeight
 
