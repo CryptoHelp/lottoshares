@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 1.0.1.0
+!define VERSION 1.0.2.0
 !define COMPANY "LottoShares project"
 !define URL http://www.lottoshares.org/
 
@@ -45,13 +45,13 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile ..\release\LottoShares-1.0.1-win32-setup.exe
+OutFile ..\release\LottoShares-1.0.2-win32-setup.exe
 InstallDir $PROGRAMFILES\LottoShares
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion 1.0.1.0
+VIProductVersion 1.0.2.0
 VIAddVersionKey ProductName LottoShares
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -74,6 +74,7 @@ Section -Main SEC0000
     File ..\release\protoshares.txt
     File ..\release\thirtypercent.txt
     File ..\release\thirtypercent2.txt
+    File ..\release\block5313.txt
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 SectionEnd
 
@@ -123,6 +124,7 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\protoshares.txt
     Delete /REBOOTOK $INSTDIR\thirtypercent.txt
     Delete /REBOOTOK $INSTDIR\thirtypercent2.txt
+    Delete /REBOOTOK $INSTDIR\block5313.txt
     DeleteRegValue HKCU "${REGKEY}\Components" Main
 SectionEnd
 

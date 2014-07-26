@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = lottoshares-qt
 macx:TARGET = "LottoShares-Qt"
-VERSION = 1.0.1.0
+VERSION = 1.0.2.0
 INCLUDEPATH += src src/json src/qt
 QT += core gui network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
