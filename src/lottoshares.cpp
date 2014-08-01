@@ -314,6 +314,12 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
                             myfile << "Matching Numbers: " << matchingNumber << " Prize:" << prize <<"\n";
                         }
                     }
+                    //Update wallet with info
+                    BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered){
+                        printf("lottoshares.cpp addlnitim\n");
+                        pwallet->AddLotteryNumbersIfTransactionInvolvingMe(ticketBlock.vtx[i].GetHash(), ticketBlock.vtx[i], drawNumbers, matchingNumber);
+                    }
+
                 }
             }else{
                 printf("Skipping Transaction - Not 8 Outputs\n");

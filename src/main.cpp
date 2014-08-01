@@ -1880,6 +1880,10 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     for (unsigned int i=0; i<vtx.size(); i++)
         SyncWithWallets(GetTxHash(i), vtx[i], this, true);
 
+    //Check for lottery result
+    //If lottery result, get block with transactions
+    //Update wallet transactions with numbers
+
     return true;
 }
 

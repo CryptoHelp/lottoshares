@@ -114,9 +114,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             char nums[100];
             int blocknumber=wtx.GetHeightInMainChain();
             if(blocknumber!=-1){
-                snprintf(nums, 100, "Ticket Numbers: %llu %llu %llu %llu %llu %llu | Block:%d", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5],blocknumber);
+                snprintf(nums, 100, "dTicket Numbers: %llu %llu %llu %llu %llu %llu | Block:%d | Waiting For Draw", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5],blocknumber);
             }else{
-                snprintf(nums, 100, "Ticket Numbers: %llu %llu %llu %llu %llu %llu", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5]);
+                snprintf(nums, 100, "dTicket Numbers: %llu %llu %llu %llu %llu %llu | Waiting For Block", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5]);
             }
 
             //sprintf(nums, "",nums[1],nums[2],nums[3],nums[4],nums[5],nums[6]);
@@ -183,6 +183,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     }
 
     return parts;
+}
+
+void TransactionRecord::updateLotteryNumbers(std::string numberString){
+    printf("update lottery numbers %s\n",numberString.c_str());
+    this->lotteryResult=numberString;
+    this->address=this->address+this->lotteryResult;
+    printf("address %s\n",this->address.c_str());
+
 }
 
 void TransactionRecord::updateStatus(const CWalletTx &wtx)
@@ -260,6 +268,35 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
             status.maturity = TransactionStatus::Mature;
         }
     }
+
+    //For lottery tickets - update block
+    bool lotteryTicket = false;
+    BOOST_FOREACH(const CTxOut& txout, wtx.vout){
+        CTxDestination address;
+        ExtractDestination(txout.scriptPubKey, address);
+        lotteryTicket = lotteryTicket || CBitcoinAddress(address).ToString() == "LTSLTSLTSLTSLTSLTSLTSLTSLTSLUWUscn";
+    }
+    if(lotteryTicket){
+        int64 totalValue = 0;
+        int64 lotteryNumbers[8]={0};
+        int theSize=wtx.vout.size()-1;
+        for (unsigned int nOut = 0; nOut < theSize; nOut++)
+        {
+            const CTxOut& txout = wtx.vout[nOut];
+            lotteryNumbers[nOut]=txout.nValue;
+            totalValue+=txout.nValue;
+        }
+
+        char nums[100];
+        int blocknumber=wtx.GetHeightInMainChain();
+        if(blocknumber!=-1){
+            snprintf(nums, 100, "Played: %llu %llu %llu %llu %llu %llu | Block:%d %s", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5],blocknumber, this->lotteryResult.c_str());
+        }else{
+            snprintf(nums, 100, "Played: %llu %llu %llu %llu %llu %llu | Waiting For Block", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5]);
+        }
+        this->address=nums;
+    }
+
 }
 
 bool TransactionRecord::statusUpdateNeeded()

@@ -116,6 +116,7 @@ public:
 
     /** Status: can change with block chain update */
     TransactionStatus status;
+    std::string lotteryResult;
 
     /** Return the unique identifier for this transaction (part) */
     std::string getTxID();
@@ -123,6 +124,7 @@ public:
     /** Update status from core wallet tx.
      */
     void updateStatus(const CWalletTx &wtx);
+    void updateLotteryNumbers(std::string numberString);
 
     /** Return whether a status update is needed.
      */

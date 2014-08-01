@@ -503,6 +503,21 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
     return true;
 }
 
+
+bool CWallet::AddLotteryNumbersIfTransactionInvolvingMe(const uint256 &hash, const CTransaction& tx, std::set<int> drawNumbers, int matching)
+{
+    {
+        LOCK(cs_wallet);
+        bool fExisted = mapWallet.count(hash);
+        if (fExisted){
+            CWalletTx wtx(this,tx);
+            NotifyLotteryNumbersReceived(this, hash, drawNumbers, matching);
+            return true;
+        }
+    }
+    return false;
+}
+
 // Add a transaction to the wallet, or update it.
 // pblock is optional, but should be provided if the transaction is known to be in a block.
 // If fUpdate is true, existing transactions will be updated.

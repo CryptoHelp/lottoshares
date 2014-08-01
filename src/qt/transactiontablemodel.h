@@ -79,6 +79,7 @@ private:
 
 public slots:
     void updateTransaction(const QString &hash, int status);
+    void updateTransactionLotteryNumbers(const QString &hash, const QString &numberString);
     void updateConfirmations();
     void updateDisplayUnit();
 

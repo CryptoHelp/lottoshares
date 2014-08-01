@@ -78,6 +78,17 @@ public:
         }
     }
 
+    void updateWalletLotteryNumbers(const uint256 &hash, std::string numberString){
+        std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
+        for(int idx = 0; idx<cachedWallet.size();idx++){
+            TransactionRecord *rec = &cachedWallet[idx];
+            if(rec->hash==hash && mi != wallet->mapWallet.end()){
+                printf("mi update wallet lottery numbers \n");
+                rec->updateLotteryNumbers(numberString);
+            }
+        }
+    }
+
     /* Update our model of the wallet incrementally, to synchronize our model of the wallet
        with that of the core.
 
@@ -236,6 +247,13 @@ TransactionTableModel::TransactionTableModel(CWallet* wallet, WalletModel *paren
 TransactionTableModel::~TransactionTableModel()
 {
     delete priv;
+}
+
+void TransactionTableModel::updateTransactionLotteryNumbers(const QString &hash, const QString &numberString)
+{
+    uint256 updated;
+    updated.SetHex(hash.toStdString());
+    priv->updateWalletLotteryNumbers(updated, numberString.toStdString());
 }
 
 void TransactionTableModel::updateTransaction(const QString &hash, int status)

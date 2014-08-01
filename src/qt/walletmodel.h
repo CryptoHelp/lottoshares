@@ -173,6 +173,8 @@ public slots:
     /* Wallet status might have changed */
     void updateStatus();
     /* New transaction, or transaction changed status */
+    void updateTransactionLottery(const QString &hash, const QString &numberString);
+
     void updateTransaction(const QString &hash, int status);
     /* New, updated or removed address book entry */
     void updateAddressBook(const QString &address, const QString &label, bool isMine, int status);
