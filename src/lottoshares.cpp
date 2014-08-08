@@ -13,7 +13,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-using namespace boost;
+
 
 using namespace std;
 using namespace boost;
@@ -23,11 +23,19 @@ using namespace boost;
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#include <openssl/rsa.h>
+#include <openssl/sha.h>
+#include <openssl/objects.h>
+#include <openssl/pem.h>
+
 string TIMEKEEPERSIGNINGADDRESS     ="LMAd3uKrc3Cuffjss9oBXZQ6HQghe7m5m2";
 string TIMEKEEPERBROADCASTADDRESS   ="LTSLTSzCWmkJx7SYznmcVNoaMdQz7t19cT";
 string DRAWMANAGERSIGNINGADDRESS    ="LUVe56XsNw2tC5v6DUrn9W2yZZQeDbfqWB";
 string DRAWMANAGERBROADCASTADDRESS  ="LTSLTSKuQ35qr4mmz5aUBU1bm4v3Q8DJby";
 string TICKETADDRESS                ="LTSLTSLTSLTSLTSLTSLTSLTSLTSLUWUscn";
+
+char mPUBKey[]="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1blo14f8xTPJUlfo0YVy\nLcixUMVfbbtoa6QCdLOaW27rlnm4zOjuFXCpFpUw3I8GvVkvqLev0Y5wE4SySUZ8\n4q3Y4YQv/7QPl9GK3jGw99c9NHnTR01xaSqymYfocgxH0OEQ2NS15E9hS6pPkRQT\nlm0k4sYr3sKHBKe+DPKBACo7az6QvpXwncFiUW7yGEZPwhzcbVAQo8E6609B00nB\nfkBrzYc6u5/IcbRV+gygYbN0EjiV9AHQtMSzkMHsA3X0T5IGRZPWOtfnfmpxzaiO\nWWXJ6nfABZXE4fqnfBcISdo2Hp701t86FnSRuuIpFGFrfKueQwEaeJps9RFyAMhA\nuwIDAQAB\n-----END PUBLIC KEY-----";
+string TIMEKEEPERRSABROADCASTADDRESS     ="LRSAKerUAXYS7nk5cwcCbDMrgp1nsFn5ik";
 
 lottoshares::lottoshares()
 {
@@ -61,31 +69,43 @@ void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool lo
         //This is a coinbase transaction, it can't be a checkpoint, skip
         return;
     }
-    if(tx.vout.size()==8 &&
+    if(tx.vout.size()==18 &&
             tx.vout[0].nValue==1 &&
             tx.vout[1].nValue==1 &&
             tx.vout[2].nValue==1 &&
             tx.vout[3].nValue==1 &&
             tx.vout[4].nValue==1 &&
             tx.vout[5].nValue==1 &&
-            tx.vout[6].nValue==1){
+            tx.vout[6].nValue==1 &&
+            tx.vout[7].nValue==1 &&
+            tx.vout[8].nValue==1 &&
+            tx.vout[9].nValue==1 &&
+            tx.vout[10].nValue==1 &&
+            tx.vout[11].nValue==1 &&
+            tx.vout[12].nValue==1 &&
+            tx.vout[13].nValue==1 &&
+            tx.vout[14].nValue==1 &&
+            tx.vout[15].nValue==1 &&
+            tx.vout[16].nValue==1
+            ){
 
+        printf("length 18 with all outputs 1 \n");
         CTxDestination address;
         ExtractDestination(tx.vout[0].scriptPubKey,address);
         std::string firstAddress=CBitcoinAddress(address).ToString().c_str();
 
-        if(firstAddress==TIMEKEEPERBROADCASTADDRESS){
+        if(firstAddress==TIMEKEEPERRSABROADCASTADDRESS){
             //Basic checks passed - extract checkpoint
-
+            printf("basic checks passed \n");
             vector<unsigned char> v;
             vector<unsigned char> signature;
-            for(int k=1;k<7;k++){
+            for(int k=1;k<17;k++){
                 ExtractDestination(tx.vout[k].scriptPubKey,address);
                 std::string outputAddress=CBitcoinAddress(address).ToString().c_str();
                 std::vector<unsigned char> vchRet;
                 DecodeBase58Check(outputAddress, vchRet);
                 for(int j=1;j<21;j++){
-                    if(signature.size()<65){
+                    if(signature.size()<256){
                         signature.push_back(vchRet[j]);
                     }else{
                         v.push_back(vchRet[j]);
@@ -100,9 +120,30 @@ void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool lo
             char messageToSign[100];
             snprintf(messageToSign, 100, "%llu:%llu:%s", theHeight, theTime, theHash.ToString().c_str());
 
-            if(verifymessage(TIMEKEEPERSIGNINGADDRESS,messageToSign,signature)){
-                Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue, logBlock);
+            //if(verifymessage(TIMEKEEPERSIGNINGADDRESS,messageToSign,signature)){
+            //    Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue, logBlock);
+            //}
+            BIO* bo = BIO_new( BIO_s_mem() );
+            BIO_write( bo, mPUBKey,strlen(mPUBKey));
+            EVP_PKEY* pkey = 0;
+            PEM_read_bio_PUBKEY( bo, &pkey, 0, 0 );
+            BIO_free(bo);
+            RSA* pubkey = EVP_PKEY_get1_RSA( pkey );
+
+            unsigned char hash[SHA256_DIGEST_LENGTH];
+            unsigned int signLen=256;
+            unsigned char sign[256];
+            for(int i=0;i<signLen;i++){
+                sign[i]=signature[i];
             }
+            SHA256((unsigned char*)messageToSign, strlen(messageToSign), hash);
+            if(RSA_verify(NID_sha256, hash, SHA256_DIGEST_LENGTH, sign, signLen, pubkey)){
+                Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue, logBlock);
+                printf("Success - add checkpoint %s\n",messageToSign);
+            }
+
+
+
         }
     }
 }
