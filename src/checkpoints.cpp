@@ -168,11 +168,11 @@ namespace Checkpoints
         return NULL;
     }
 
-    void addCheckpoint(int64 theTime, int64 theHeight, uint256 theHashBestChain, bool createQueue, bool blocklog){
+    void addCheckpoint(int64 theTime, int64 theHeight, uint256 theHashBestChain, bool createQueue, bool blocklog, uint256 signatureHash){
         if(mapCheckpoints[theHeight]==0){
             ofstream myfile;
             myfile.open ((GetDataDir() / "checkpoints.txt").string().c_str(), ios::app);
-            myfile << theHeight << "," << theHashBestChain.GetHex() << "," << theTime <<"\n";
+            myfile << theHeight << "," << theHashBestChain.GetHex() << "," << theTime << "," << signatureHash.GetHex() << "\n";
             myfile.close();
 
             mapCheckpoints[theHeight]=theHashBestChain;
@@ -185,7 +185,7 @@ namespace Checkpoints
                 boost::filesystem::create_directories(path.parent_path());
                 ofstream broadcastOutput;
                 broadcastOutput.open(path.string().c_str());
-                broadcastOutput << theHeight << ":" << theHashBestChain.ToString() << ":" << theTime;
+                broadcastOutput << theHeight << ":" << theHashBestChain.ToString() << ":" << theTime << ":" << signatureHash.ToString();
                 broadcastOutput.close();
             }
 

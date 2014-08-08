@@ -138,7 +138,9 @@ void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool lo
             }
             SHA256((unsigned char*)messageToSign, strlen(messageToSign), hash);
             if(RSA_verify(NID_sha256, hash, SHA256_DIGEST_LENGTH, sign, signLen, pubkey)){
-                Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue, logBlock);
+                uint256 signatureHash;
+                SHA256((unsigned char*)sign, 256, (unsigned char*)&signatureHash);
+                Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue, logBlock, signatureHash);
                 printf("Success - add checkpoint %s\n",messageToSign);
             }
 

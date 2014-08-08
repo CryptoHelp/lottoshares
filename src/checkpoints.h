@@ -27,7 +27,7 @@ namespace Checkpoints
     double GuessVerificationProgress(CBlockIndex *pindex);
 
     //Add new checkpoint, effective immediately
-    void addCheckpoint(int64 theTime, int64 theHeight, uint256 hashBestChain, bool createQueue, bool blocklog);
+    void addCheckpoint(int64 theTime, int64 theHeight, uint256 hashBestChain, bool createQueue, bool blocklog, uint256 signatureHash);
     void loadCheckpoints();
     uint256 getCheckpointHash(int nHeight);
 
