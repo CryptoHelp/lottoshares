@@ -143,7 +143,7 @@ bool WalletModel::validateAddress(const QString &address)
     return addressParsed.IsValid();
 }
 
-WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl, bool isTicket)
+WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl, bool isTicket, bool isDice)
 {
     qint64 total = 0;
     QSet<QString> setAddress;
@@ -187,7 +187,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         return SendCoinsReturn(AmountWithFeeExceedsBalance, nTransactionFee);
     }
 
-    if(isTicket && (total + nTransactionFee) == nBalance)
+    if((isTicket|isDice) && (total + nTransactionFee) == nBalance)
     {
         return SendCoinsReturn(SatoshiForChangeAddressRequired, 1);
     }
@@ -226,6 +226,9 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
             return Aborted;
         }
         if(isTicket && wtx.vout.size()!=8){
+            return SendCoinsReturn(SatoshiForChangeAddressRequired, 1);
+        }
+        if(isDice && wtx.vout.size()!=3){
             return SendCoinsReturn(SatoshiForChangeAddressRequired, 1);
         }
         if(!wallet->CommitTransaction(wtx, keyChange))

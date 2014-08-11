@@ -18,7 +18,7 @@ public:
 
 void checkForCheckpoints(std::vector<CTransaction> vtx, bool makeFileQueue, bool logBlock);
 
-bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool addTransactions, bool logBlock);
+bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool addTransactions, bool logBlock, int blockNumber);
 
 int64 calculateTicketIncome(std::vector<CTransaction> vtx);
 
@@ -26,7 +26,7 @@ void addShareDrops(CBlock &block);
 
 void writeLogInfoForBlock(uint256 logBlockHash);
 
-void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool logBlock);
+uint256 checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool logBlock, int64 &theHeight, int64 &theTime, uint256 &theHash);
 
 void randomTickets(int64 amount, int64 interval);
 

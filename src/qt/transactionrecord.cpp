@@ -74,12 +74,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
         bool fAllToMe = true;
         bool lotteryTicket = false;
+        bool dicePlay=false;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout){
             fAllToMe = fAllToMe && wallet->IsMine(txout);
             CTxDestination address;
             ExtractDestination(txout.scriptPubKey, address);
             lotteryTicket = lotteryTicket || CBitcoinAddress(address).ToString() == "LTSLTSLTSLTSLTSLTSLTSLTSLTSLUWUscn";
+            dicePlay = dicePlay || CBitcoinAddress(address).ToString() == "LTSLTSLTSLTSLTSLTSLTSLTSFJWz2ixwtN";
         }
 
 
@@ -93,7 +95,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         } else if (fAllFromMe && lotteryTicket)
         {
             // Lottery Ticket
-            //int64 nChange = wtx.GetChange();
 
             int64 totalValue = 0;
             int64 lotteryNumbers[8]={0};
@@ -111,22 +112,37 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 totalValue+=txout.nValue;
             }
 
-            char nums[100];
-            int blocknumber=wtx.GetHeightInMainChain();
-            if(blocknumber!=-1){
-                snprintf(nums, 100, "dTicket Numbers: %llu %llu %llu %llu %llu %llu | Block:%d | Waiting For Draw", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5],blocknumber);
-            }else{
-                snprintf(nums, 100, "dTicket Numbers: %llu %llu %llu %llu %llu %llu | Waiting For Block", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5]);
-            }
-
-            //sprintf(nums, "",nums[1],nums[2],nums[3],nums[4],nums[5],nums[6]);
-            //printf("%s\n",nums);
-            //printf("Ticket Numbers: %llu %llu %llu %llu %llu %llu",nums[1],nums[2],nums[3],nums[4],nums[5],nums[6]);
+            char nums[100]="Lottery Ticket";
 
             parts.append(TransactionRecord(hash, nTime, TransactionRecord::LotteryTicket, nums,-totalValue, 0));
 
+        } else if (fAllFromMe && dicePlay)
+        {
+            // Dice Game
+
+            int64 totalValue = 0;
+            int64 lotteryNumbers[8]={0};
+
+            for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
+            {
+                const CTxOut& txout = wtx.vout[nOut];
+                if(wallet->IsMine(txout))
+                {
+                    // Ignore parts sent to self, as this is usually the change
+                    // from a transaction sent back to our own address.
+                    continue;
+                }
+                lotteryNumbers[nOut]=txout.nValue;
+                totalValue+=txout.nValue;
+            }
+
+            char nums[100]="Dice Game";
+
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::DiceGame, nums,-totalValue, 0));
 
         }
+
+
         else if (fAllFromMe)
         {
             //
@@ -271,11 +287,15 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
 
     //For lottery tickets - update block
     bool lotteryTicket = false;
+    bool dicegame=false;
     BOOST_FOREACH(const CTxOut& txout, wtx.vout){
         CTxDestination address;
         ExtractDestination(txout.scriptPubKey, address);
         lotteryTicket = lotteryTicket || CBitcoinAddress(address).ToString() == "LTSLTSLTSLTSLTSLTSLTSLTSLTSLUWUscn";
+        dicegame = dicegame || CBitcoinAddress(address).ToString() == "LTSLTSLTSLTSLTSLTSLTSLTSFJWz2ixwtN";
     }
+
+
     if(lotteryTicket){
         int64 totalValue = 0;
         int64 lotteryNumbers[8]={0};
@@ -297,6 +317,95 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         this->address=nums;
     }
 
+    if(dicegame){
+        int64 totalValue = 0;
+        //int64 lotteryNumbers[8]={0};
+        int theSize=wtx.vout.size()-1;
+        for (unsigned int nOut = 0; nOut < theSize; nOut++)
+        {
+            const CTxOut& txout = wtx.vout[nOut];
+            //lotteryNumbers[nOut]=txout.nValue;
+            totalValue+=txout.nValue;
+        }
+
+        char nums[100];
+        int blocknumber=wtx.GetHeightInMainChain();
+        int64 gameTypeInt=wtx.vout[0].nValue;
+        std::string gameType="";
+        switch(gameTypeInt){
+        case 1:
+            gameType="Roll 1";
+            break;
+        case 2:
+            gameType="Roll 1 or 2";
+            break;
+        case 3:
+            gameType="Roll 1 to 4";
+            break;
+        case 4:
+            gameType="Roll 1 to 8";
+            break;
+        case 5:
+            gameType="Roll 1 to 16";
+            break;
+        case 6:
+            gameType="Roll 1 to 32";
+            break;
+        case 7:
+            gameType="Roll 1 to 64";
+            break;
+        case 8:
+            gameType="Roll 1 to 128";
+            break;
+        case 9:
+            gameType="Roll 1 to 256";
+            break;
+        case 10:
+            gameType="Roll 1 to 512";
+            break;
+        case 11:
+            gameType="Roll 1 to 768";
+            break;
+        case 12:
+            gameType="Roll 1 to 896";
+            break;
+        case 13:
+            gameType="Roll 1 to 960";
+            break;
+        case 14:
+            gameType="Roll 1 to 992";
+            break;
+        case 15:
+            gameType="Roll 1 to 1008";
+            break;
+        case 16:
+            gameType="Roll 1 to 1016";
+            break;
+        case 17:
+            gameType="Roll 1 to 1020";
+            break;
+        case 18:
+            gameType="Roll 1 to 1022";
+            break;
+        case 19:
+            gameType="Roll 1 to 1023";
+            break;
+        case 20:
+            gameType="Roll Odd Number";
+            break;
+        case 21:
+            gameType="Roll Even Number";
+            break;
+        }
+
+
+        if(blocknumber!=-1){
+            snprintf(nums, 100, "Dice Game: %s | Block:%d %s", gameType.c_str(),blocknumber, this->lotteryResult.c_str());
+        }else{
+            snprintf(nums, 100, "Dice Game: %s | Waiting For Block", gameType.c_str());
+        }
+        this->address=nums;
+    }
 }
 
 bool TransactionRecord::statusUpdateNeeded()

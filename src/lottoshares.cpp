@@ -33,6 +33,7 @@ string TIMEKEEPERBROADCASTADDRESS   ="LTSLTSzCWmkJx7SYznmcVNoaMdQz7t19cT";
 string DRAWMANAGERSIGNINGADDRESS    ="LUVe56XsNw2tC5v6DUrn9W2yZZQeDbfqWB";
 string DRAWMANAGERBROADCASTADDRESS  ="LTSLTSKuQ35qr4mmz5aUBU1bm4v3Q8DJby";
 string TICKETADDRESS                ="LTSLTSLTSLTSLTSLTSLTSLTSLTSLUWUscn";
+string DICEADDRESS                  ="LTSLTSLTSLTSLTSLTSLTSLTSFJWz2ixwtN";
 
 char mPUBKey[]="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1blo14f8xTPJUlfo0YVy\nLcixUMVfbbtoa6QCdLOaW27rlnm4zOjuFXCpFpUw3I8GvVkvqLev0Y5wE4SySUZ8\n4q3Y4YQv/7QPl9GK3jGw99c9NHnTR01xaSqymYfocgxH0OEQ2NS15E9hS6pPkRQT\nlm0k4sYr3sKHBKe+DPKBACo7az6QvpXwncFiUW7yGEZPwhzcbVAQo8E6609B00nB\nfkBrzYc6u5/IcbRV+gygYbN0EjiV9AHQtMSzkMHsA3X0T5IGRZPWOtfnfmpxzaiO\nWWXJ6nfABZXE4fqnfBcISdo2Hp701t86FnSRuuIpFGFrfKueQwEaeJps9RFyAMhA\nuwIDAQAB\n-----END PUBLIC KEY-----";
 string TIMEKEEPERRSABROADCASTADDRESS     ="LRSAKerUAXYS7nk5cwcCbDMrgp1nsFn5ik";
@@ -64,10 +65,10 @@ bool verifymessage(string strAddress, string strMessage, vector<unsigned char> v
     return (pubkey.GetID() == keyID);
 }
 
-void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool logBlock){
+uint256 checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool logBlock, int64 &theHeight, int64 &theTime, uint256 &theHash){
     if(tx.IsCoinBase()){
         //This is a coinbase transaction, it can't be a checkpoint, skip
-        return;
+        return NULL;
     }
     if(tx.vout.size()==18 &&
             tx.vout[0].nValue==1 &&
@@ -113,9 +114,9 @@ void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool lo
                 }
             }
 
-            int64 theHeight = *(int64*)&v[0];
-            int64 theTime = *(int64*)&v[8];
-            uint256 theHash = *(uint256*)&v[16];
+            theHeight = *(int64*)&v[0];
+            theTime = *(int64*)&v[8];
+            theHash = *(uint256*)&v[16];
 
             char messageToSign[100];
             snprintf(messageToSign, 100, "%llu:%llu:%s", theHeight, theTime, theHash.ToString().c_str());
@@ -142,28 +143,35 @@ void checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool lo
                 SHA256((unsigned char*)sign, 256, (unsigned char*)&signatureHash);
                 Checkpoints::addCheckpoint(theTime, theHeight, theHash, makeFileQueue, logBlock, signatureHash);
                 printf("Success - add checkpoint %s\n",messageToSign);
+                return signatureHash;
             }
 
 
 
         }
     }
+    return NULL;
 }
 
 void checkForCheckpoints(std::vector<CTransaction> vtx, bool makeFileQueue, bool logBlock){
     for (unsigned int i=0; i<vtx.size(); i++){
         //check each included transaction to see if it is a checkpoint
-        checkTransactionForCheckpoints(vtx[i],makeFileQueue, logBlock);
+        int64 theHeight, theTime; uint256 theHash;
+        checkTransactionForCheckpoints(vtx[i],makeFileQueue, logBlock, theHeight, theTime, theHash);
     }
 }
 
-std::set<int> generateDrawNumbersFromString(char *ssc){
+int getDiceRoll(uint256 transactionHash, uint256 seedHash){
+    uint64 xorred = transactionHash.Get64(2) ^ seedHash.Get64(2);
+    return (xorred%1024)+1;
+}
+
+std::set<int> generateDrawNumbersFromString(uint256 seedhash){
 
     //Hash seedString 6 times in a row
     std::set<int> drawnNumbers;
+    uint256 hash2=seedhash;
 
-    uint256 hash2;
-    SHA256((unsigned char*)ssc, strlen(ssc), (unsigned char*)&hash2);
     do{
         for(int i=0;i<4;i++){
             SHA256((unsigned char*)&hash2, sizeof(hash2), (unsigned char*)&hash2);
@@ -196,7 +204,7 @@ int countMatches(std::set<int> ticketNumbers, std::set<int> drawNumbers){
     return count;
 }
 
-void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uint256 theTicketBlockHash, std::set<int> drawNumbers, bool logTickets){
+void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, int64 &feesFromPayout, uint256 theTicketBlockHash, std::set<int> drawNumbers, bool logTickets, uint256 seedHash){
 
     ofstream myfile;
     if(logTickets){
@@ -250,7 +258,103 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
             //myfile << "Skipping Coinbase\n";
             //This is a coinbase transaction, it can't be a lottery ticket, skip
         }else{
-            if(ticketBlock.vtx[i].vout.size()==8){
+            if(ticketBlockHeader->nHeight>FORKHEIGHT && ticketBlock.vtx[i].vout.size()==3){
+                //Dice plays always have 3 outputs
+
+                //First 2 outputs must have ticket address
+                bool validOutAddresses=true;
+                int64 stake=0;
+                for(int j=0;j<2;j++){
+                    CTxDestination address;
+                    ExtractDestination(ticketBlock.vtx[i].vout[j].scriptPubKey,address);
+                    std::string outAddress=CBitcoinAddress(address).ToString().c_str();
+                    stake=stake+ticketBlock.vtx[i].vout[j].nValue;
+                    if(outAddress!=DICEADDRESS){
+                        //if(logTickets){
+                        //    myfile << "Not using ticket addresss" << " " << j << " " << outAddress << "\n";
+                        //}
+                        validOutAddresses=false;
+                        break;
+                    }
+                }
+
+                if(!validOutAddresses){
+                    //This is not a ticket
+                    printf("Skipping - not using ticket addres\n");
+                    continue;
+                }
+
+                printf("Dice Trx ID: %s\n",ticketBlock.vtx[i].GetHash().GetHex().c_str());
+
+                int64 gameNumber=ticketBlock.vtx[i].vout[0].nValue;
+                printf("Game: %llu\n",gameNumber);
+
+
+                int diceRoll=getDiceRoll(ticketBlock.vtx[i].GetHash(),seedHash);
+                printf("Roll: %d\n",diceRoll);
+
+                if(gameNumber<22){
+
+                    printf("Valid Dice Roll\n");
+                    totalTicketStake+=stake;
+
+                int64 prize=0;
+                if(gameNumber>0 && gameNumber<11){
+                    if(diceRoll<(2^(gameNumber-1))+1){
+                        prize=stake*(2^(11-gameNumber));
+                    }
+                }else if(gameNumber>10 && gameNumber<20){
+                    if(diceRoll<1025-(2^((gameNumber-19)*-1))){
+                        prize=stake+(stake>>(gameNumber-10));
+                    }
+                }else if(gameNumber==20){
+                    if(diceRoll%2==1){
+                        prize=stake*2;
+                    }
+                }else if(gameNumber==21){
+                    if(diceRoll%2==0){
+                        prize=stake*2;
+                    }
+                }
+
+                    printf("Prize %llu\n",prize);
+/*
+                    if(logTickets && (drawNumbers.size()==0 || prize>0)){
+                        myfile << "Ticket Transaction ID:" << ticketBlock.vtx[i].GetHash().GetHex() <<":";
+                        myfile << "Numbers:";
+                        std::set<int>::iterator itt;
+                        for (itt=ticketNumbers.begin(); itt!=ticketNumbers.end(); ++itt){
+                            myfile << " " << *itt;
+                        }
+                        myfile << ":Stake:" << stake << ":";
+                        CTxDestination address;
+                        ExtractDestination(ticketBlock.vtx[i].vout[7].scriptPubKey,address);
+                        std::string payoutAddress=CBitcoinAddress(address).ToString().c_str();
+                        myfile << ":Payout Address:" << payoutAddress <<"\n";
+
+                    }
+*/
+                    if(prize>0){
+                        CTxDestination address;
+                        ExtractDestination(ticketBlock.vtx[i].vout[2].scriptPubKey,address);
+                        std::string payoutAddress=CBitcoinAddress(address).ToString().c_str();
+                        printf("Payout Address %s\n",payoutAddress.c_str());
+                        payoutRequirements[payoutAddress]=payoutRequirements[payoutAddress]+prize;
+                        totalPrizes+=prize;
+                        /*if(logTickets && drawNumbers.size()==6){
+                            myfile << "Matching Numbers: " << matchingNumber << " Prize:" << prize <<"\n";
+                        }*/
+                    }
+                    //Update wallet with info
+                    /*BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered){
+                        printf("lottoshares.cpp addlnitim\n");
+                        pwallet->AddLotteryNumbersIfTransactionInvolvingMe(ticketBlock.vtx[i].GetHash(), ticketBlock.vtx[i], drawNumbers, matchingNumber);
+                    }*/
+
+                }
+
+
+            }else if(ticketBlock.vtx[i].vout.size()==8){
                 //Lottery tickets always have 8 outputs
                 //printf("Transaction - Has 8 Outputs\n");
 
@@ -352,6 +456,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
                         std::string payoutAddress=CBitcoinAddress(address).ToString().c_str();
                         printf("Payout Address %s\n",payoutAddress.c_str());
                         payoutRequirements[payoutAddress]=payoutRequirements[payoutAddress]+prize;
+                        feesFromPayout=feesFromPayout+prize;
                         totalPrizes+=prize;
                         if(logTickets && drawNumbers.size()==6){
                             myfile << "Matching Numbers: " << matchingNumber << " Prize:" << prize <<"\n";
@@ -365,7 +470,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
 
                 }
             }else{
-                printf("Skipping Transaction - Not 8 Outputs\n");
+                printf("Skipping Transaction - Not 3 or 8 Outputs\n");
             }
         }
     }
@@ -380,7 +485,125 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements,uin
     }
 }
 
-bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool addTransactions, bool logTickets){
+void checkTransactionForPayoutsFromDrawTransaction(CTransaction vtx,std::map<string, int64> &payoutRequirements,int64 &feesFromPayout, bool logTickets, ofstream &myfile){
+    if(vtx.vout.size()==9 &&
+        vtx.vout[0].nValue==1 &&
+        vtx.vout[1].nValue==1 &&
+        vtx.vout[2].nValue==1 &&
+        vtx.vout[3].nValue==1 &&
+        vtx.vout[4].nValue==1 &&
+        vtx.vout[5].nValue==1 &&
+        vtx.vout[6].nValue==1 &&
+        vtx.vout[7].nValue==1){
+
+        CTxDestination address;
+        ExtractDestination(vtx.vout[0].scriptPubKey,address);
+        std::string firstAddress=CBitcoinAddress(address).ToString().c_str();
+
+        if(firstAddress==DRAWMANAGERBROADCASTADDRESS){
+            //Basic checks passed - extract checkpoint
+            vector<unsigned char> v;
+            vector<unsigned char> signature;
+            for(int k=1;k<8;k++){
+                ExtractDestination(vtx.vout[k].scriptPubKey,address);
+                std::string outputAddress=CBitcoinAddress(address).ToString().c_str();
+                std::vector<unsigned char> vchRet;
+                DecodeBase58Check(outputAddress, vchRet);
+                for(int j=1;j<21;j++){
+                    if(signature.size()<65){
+                        signature.push_back(vchRet[j]);
+                    }else{
+                        v.push_back(vchRet[j]);
+                    }
+                }
+            }
+
+
+
+            int64 theHeight = *(int64*)&v[0];
+            int64 theTime = *(int64*)&v[8];
+            uint256 theHashNew = *(uint256*)&v[16];
+
+            char cN[20]={0};
+            for(int i=0;i<20;i++){
+                cN[i]=*(char*)&v[48+i];
+            }
+            char commaedNumbers[100];
+
+            sprintf(commaedNumbers, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+                    cN[0],cN[1],cN[2],cN[3],cN[4],cN[5],cN[6],cN[7],cN[8],cN[9],
+                    cN[10],cN[11],cN[12],cN[13],cN[14],cN[15],cN[16],cN[17],cN[18],cN[19]
+                    );
+
+            char messageToSign[200];
+            sprintf(messageToSign, "%s:%llu:%llu:%s", commaedNumbers, theHeight, theTime, theHashNew.ToString().c_str());
+            printf("Message To Verify, %s %s",messageToSign, DRAWMANAGERSIGNINGADDRESS.c_str());
+            if(verifymessage(DRAWMANAGERSIGNINGADDRESS,messageToSign,signature)){
+                char randSeedString[300];
+                //string strSig=EncodeBase64(&signature[0], signature.size());
+                sprintf(randSeedString, "%s:%llu:%llu:%s", commaedNumbers, theHeight, theTime, theHashNew.ToString().c_str());
+                printf("Found payout:%s\n",randSeedString);
+
+                std::set<int> drawNumbers;
+                uint256 hash2;
+                SHA256((unsigned char*)randSeedString, strlen(randSeedString), (unsigned char*)&hash2);
+                drawNumbers = generateDrawNumbersFromString(hash2);
+
+                uint256 seedHash;
+                SHA256((unsigned char*)randSeedString, strlen(randSeedString), (unsigned char*)&seedHash);
+
+                if(logTickets){
+                    myfile << "------------------------------------------\n";
+                    myfile << "Block: " << theHeight << "\n";
+                    myfile << "Checkpointed Time: " << theTime << "\n";
+                    myfile << "Numbers:";
+                    std::set<int>::iterator itt;
+                    for (itt=drawNumbers.begin(); itt!=drawNumbers.end(); ++itt){
+                        myfile << " " << *itt;
+                    }
+                    myfile << "\n";
+                    myfile << "Random Seed String:" << randSeedString << "\n";
+                }
+                //Note - the block may contain multiple draw results
+                calculatePayoutRequirements(payoutRequirements,feesFromPayout,theHashNew,drawNumbers,logTickets,seedHash);
+
+            }
+        }
+    }
+}
+
+void checkTransactionForPayoutsFromCheckpointTransaction(CTransaction vtx,std::map<string, int64> &payoutRequirements,int64 &feesFromPayout, bool logTickets, ofstream &myfile){
+
+    int64 theHeight;
+    int64 theTime;
+    uint256 theHashNew;
+    uint256 seedHash = checkTransactionForCheckpoints(vtx, false, false, theHeight, theTime, theHashNew);
+
+    if(seedHash!=NULL){
+        std::set<int> drawNumbers;
+        drawNumbers = generateDrawNumbersFromString(seedHash);
+
+        //uint256 seedHash;
+        //SHA256((unsigned char*)randSeedString, strlen(randSeedString), (unsigned char*)&seedHash);
+
+        if(logTickets){
+            myfile << "------------------------------------------\n";
+            myfile << "Block: " /*<< theHeight*/ << "\n";
+            myfile << "Checkpointed Time: " /*<< theTime*/ << "\n";
+            myfile << "Numbers:";
+            std::set<int>::iterator itt;
+            for (itt=drawNumbers.begin(); itt!=drawNumbers.end(); ++itt){
+                myfile << " " << *itt;
+            }
+            myfile << "\n";
+            myfile << "Random Seed String:" << seedHash.GetHex() << "\n";
+        }
+        //Note - the block may contain multiple draw results
+        calculatePayoutRequirements(payoutRequirements,feesFromPayout,theHashNew,drawNumbers,logTickets,seedHash);
+    }
+}
+
+bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool addTransactions, bool logTickets, int blockHeight){
 
     ofstream myfile;
     if(logTickets){
@@ -395,90 +618,12 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
         if(vtx[i].IsCoinBase()){
             //This is a coinbase transaction, it can't be a draw result, skip
         }else{
-            if(vtx[i].vout.size()==9 &&
-                vtx[i].vout[0].nValue==1 &&
-                vtx[i].vout[1].nValue==1 &&
-                vtx[i].vout[2].nValue==1 &&
-                vtx[i].vout[3].nValue==1 &&
-                vtx[i].vout[4].nValue==1 &&
-                vtx[i].vout[5].nValue==1 &&
-                vtx[i].vout[6].nValue==1 &&
-                vtx[i].vout[7].nValue==1){
-
-                CTxDestination address;
-                ExtractDestination(vtx[i].vout[0].scriptPubKey,address);
-                std::string firstAddress=CBitcoinAddress(address).ToString().c_str();
-
-                if(firstAddress==DRAWMANAGERBROADCASTADDRESS){
-                    //Basic checks passed - extract checkpoint
-                    vector<unsigned char> v;
-                    vector<unsigned char> signature;
-                    for(int k=1;k<8;k++){
-                        ExtractDestination(vtx[i].vout[k].scriptPubKey,address);
-                        std::string outputAddress=CBitcoinAddress(address).ToString().c_str();
-                        std::vector<unsigned char> vchRet;
-                        DecodeBase58Check(outputAddress, vchRet);
-                        for(int j=1;j<21;j++){
-                            if(signature.size()<65){
-                                signature.push_back(vchRet[j]);
-                            }else{
-                                v.push_back(vchRet[j]);
-                            }
-                        }
-                    }
-
-
-
-                    int64 theHeight = *(int64*)&v[0];
-                    int64 theTime = *(int64*)&v[8];
-                    uint256 theHashNew = *(uint256*)&v[16];
-
-                    char cN[20]={0};
-                    for(int i=0;i<20;i++){
-                        cN[i]=*(char*)&v[48+i];
-                    }
-                    char commaedNumbers[100];
-
-                    sprintf(commaedNumbers, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                            cN[0],cN[1],cN[2],cN[3],cN[4],cN[5],cN[6],cN[7],cN[8],cN[9],
-                            cN[10],cN[11],cN[12],cN[13],cN[14],cN[15],cN[16],cN[17],cN[18],cN[19]
-                            );
-
-                    char messageToSign[200];
-                    sprintf(messageToSign, "%s:%llu:%llu:%s", commaedNumbers, theHeight, theTime, theHashNew.ToString().c_str());
-                    printf("Message To Verify, %s %s",messageToSign, DRAWMANAGERSIGNINGADDRESS.c_str());
-                    if(verifymessage(DRAWMANAGERSIGNINGADDRESS,messageToSign,signature)){
-                        char randSeedString[300];
-                        //string strSig=EncodeBase64(&signature[0], signature.size());
-                        sprintf(randSeedString, "%s:%llu:%llu:%s", commaedNumbers, theHeight, theTime, theHashNew.ToString().c_str());
-                        printf("Found payout:%s\n",randSeedString);
-
-                        std::set<int> drawNumbers;
-                        drawNumbers = generateDrawNumbersFromString(randSeedString);
-
-                        if(logTickets){
-                            myfile << "------------------------------------------\n";
-                            myfile << "Block: " << theHeight << "\n";
-                            myfile << "Checkpointed Time: " << theTime << "\n";
-                            myfile << "Numbers:";
-                            std::set<int>::iterator itt;
-                            for (itt=drawNumbers.begin(); itt!=drawNumbers.end(); ++itt){
-                                myfile << " " << *itt;
-                            }
-                            myfile << "\n";
-                            myfile << "Random Seed String:" << randSeedString << "\n";
-                        }
-                        //Note - the block may contain multiple draw results
-                        calculatePayoutRequirements(payoutRequirements,theHashNew,drawNumbers,logTickets);
-
-                    }
-                }
+            if(blockHeight<FORKHEIGHT){
+                checkTransactionForPayoutsFromDrawTransaction(vtx[i],payoutRequirements,feesFromPayout,logTickets,myfile);
+            }else{
+                checkTransactionForPayoutsFromCheckpointTransaction(vtx[i],payoutRequirements,feesFromPayout,logTickets,myfile);
             }
         }
-    }
-    //calculate total fees payout
-    for (std::map<string, int64>::iterator it=payoutRequirements.begin(); it!=payoutRequirements.end(); ++it){
-        feesFromPayout=feesFromPayout+it->second;
     }
 
     if(addTransactions){
@@ -569,7 +714,8 @@ void writeLogInfoForBlock(uint256 logBlockHash){
 
     //Valid tickets
     //Tickets played
-    calculatePayoutRequirements(logPayouts,logBlockHash, emptyNumberSet, true);
+    int64 notNeeded=0;
+    calculatePayoutRequirements(logPayouts,notNeeded,logBlockHash, emptyNumberSet, true,0);
 
 
 
@@ -587,7 +733,7 @@ void writeLogInfoForBlock(uint256 logBlockHash){
 
     //Draws found
     int64 feesFromPayout=0;
-    checkForPayouts(ticketBlock.vtx, feesFromPayout, false, true);
+    checkForPayouts(ticketBlock.vtx, feesFromPayout, false, true,ticketBlockHeader->nHeight);
 
     //Prizes awarded
 

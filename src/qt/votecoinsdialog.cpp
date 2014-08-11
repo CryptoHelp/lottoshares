@@ -85,18 +85,34 @@ void VoteCoinsDialog::sendToRecipients(){
         return;
 
         VoteCoinsEntry *entry = qobject_cast<VoteCoinsEntry*>(ui->entries->itemAt(0)->widget());
-        if(entry)
-            {
-            if(entry->validate())
-            {
-                for(int i=0;i<7;i++){
-                    recipients.append(entry->getValue(i));
-                    totalPlay+=recipients[i].amount;
+        if(entry){
+            if(entry->getGameType()==0){
+                //Lottery
+                if(entry->validate()){
+                    for(int i=0;i<7;i++){
+                        recipients.append(entry->getValue(i));
+                        totalPlay+=recipients[i].amount;
+                    }
                 }
-            }
-            else
-            {
-                valid = false;
+                else{
+                    valid = false;
+                }
+            }else if(entry->getGameType()==1){
+                //Dice
+                if(entry->validateDice()){
+                    //for(int i=0;i<2;i++){
+                        //recipients.append(entry->getValue(i));
+                        //totalPlay+=recipients[i].amount;
+                    //}
+                    recipients.append(entry->getDiceGame());
+                    recipients.append(entry->getDiceAmount());
+                    totalPlay+=recipients[0].amount;
+                    totalPlay+=recipients[1].amount;
+
+                }
+                else{
+                    valid = false;
+                }
             }
         }
 
@@ -138,12 +154,25 @@ void VoteCoinsDialog::sendToRecipients(){
         return;
     }
 
-    WalletModel::SendCoinsReturn sendstatus = model->sendCoins(recipients, NULL, true);
-    if(sendstatus.status==WalletModel::SatoshiForChangeAddressRequired){
-        //try again
-        if(recipients[6].amount>2){
-            recipients[6].amount=recipients[6].amount-1;
-            sendstatus = model->sendCoins(recipients, NULL, true);
+    WalletModel::SendCoinsReturn sendstatus;
+
+    if(entry->getGameType()==0){
+        sendstatus= model->sendCoins(recipients, NULL, true,false);
+        if(sendstatus.status==WalletModel::SatoshiForChangeAddressRequired){
+            //try again
+            if(recipients[6].amount>2){
+                recipients[6].amount=recipients[6].amount-1;
+                sendstatus = model->sendCoins(recipients, NULL, true, false);
+            }
+        }
+    }else if(entry->getGameType()==1){
+        sendstatus= model->sendCoins(recipients, NULL, false, true);
+        if(sendstatus.status==WalletModel::SatoshiForChangeAddressRequired){
+            //try again
+            if(recipients[1].amount>2){
+                recipients[1].amount=recipients[1].amount-1;
+                sendstatus = model->sendCoins(recipients, NULL, false, true);
+            }
         }
     }
     switch(sendstatus.status)

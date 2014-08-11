@@ -71,7 +71,8 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf,
-        LotteryTicket
+        LotteryTicket,
+        DiceGame
     };
 
     /** Number of confirmation needed for transaction */

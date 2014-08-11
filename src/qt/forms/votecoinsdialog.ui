@@ -116,7 +116,7 @@
         <string>Confirm the send action</string>
        </property>
        <property name="text">
-        <string>Play Ticket</string>
+        <string>Play</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">

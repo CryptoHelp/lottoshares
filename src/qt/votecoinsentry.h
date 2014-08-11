@@ -19,9 +19,15 @@ public:
     explicit VoteCoinsEntry(QWidget *parent = 0);
     ~VoteCoinsEntry();
 
+
     void setModel(WalletModel *model);
     bool validate();
     SendCoinsRecipient getValue(int ballNumber);
+    int getGameType();
+    bool validateDice();
+    SendCoinsRecipient getDiceGame();
+    SendCoinsRecipient getDiceAmount();
+
 
     /** Return whether the entry is still empty and unedited */
     bool isClear();

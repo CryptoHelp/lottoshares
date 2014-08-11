@@ -29,7 +29,8 @@ uint256 hashGenesisBlock("0xd0211b676d5296b1e7dbc022a9d92c93604fae2dff0ebb4403dd
 uint256 merklerootGenesisBlock("0x3ad68d6702da84d7ad6e2ccf88394432e7067ee3c6d1ac18cea5be327fcc2101");
 static const int64 nTargetTimespan = 3.5 * 24 * 60 * 60; // LottoShares: 3.5 days
 static const int64 nTargetSpacing = 2.5 * 60; // LottoShares: 2.5 minutes
-static const int64 nInterval = nTargetTimespan / nTargetSpacing;
+static const int64 nTargetSpacingFORK = 40; // 30 seconds
+//static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 static const int64 TWOYEARS = 2 * 365 * 24 * 24;
 static const int64 ONEYEAR =  365 * 24 * 24;
 static const int64 FIFTYDAYS =  50 * 24 * 24;
@@ -765,7 +766,8 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
         unsigned int nSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
         //Check if tx contains checkpoint
-        checkTransactionForCheckpoints(tx,GetBoolArg("-broadcastdraws"),GetBoolArg("-logblock"));
+        int64 theHeight, theTime; uint256 theHash;
+        checkTransactionForCheckpoints(tx,GetBoolArg("-broadcastdraws"),GetBoolArg("-logblock"),theHeight,theTime,theHash);
 
         // Don't accept it if it can't get into a block
         int64 txMinFee = tx.GetMinFee(1000, true, GMF_RELAY);
@@ -1168,6 +1170,10 @@ int64 GetBlockValue(int nHeight, int64 nFees, unsigned int difficultynbits)
         nSubsidy = COIN*1;
     }
 
+    if(nHeight>FORKHEIGHT){
+        //After fork, target time is 4 times as fast - so smaller subsidy
+        nSubsidy=nSubsidy>>2;
+    }
     //printf("alert:subsidy %llu\n",nSubsidy);
 
     return nSubsidy + nFees;
@@ -1243,7 +1249,13 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
     CBigNum bnNew(PastDifficultyAverage);
 
-    int64 nTargetTimespan = CountBlocks*nTargetSpacing;
+    int64 nTargetTimespan = 0;
+
+    if(pindexLast->nHeight<FORKHEIGHT){
+        nTargetTimespan=CountBlocks*nTargetSpacing;
+    }else{
+        nTargetTimespan=CountBlocks*nTargetSpacingFORK;
+    }
 
     if (nActualTimespan < nTargetTimespan/3)
         nActualTimespan = nTargetTimespan/3;
@@ -1819,7 +1831,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
 
     //Ensure if payout transaction(s) is/are included, all payouts are made and calculate commission allowed
     int64 feesFromPayout=0;
-    if(!checkForPayouts(vtx,feesFromPayout,false,false)){
+    if(!checkForPayouts(vtx,feesFromPayout,false,false,pindex->nHeight)){
         return state.DoS(100, error("ConnectBlock() : coinbase not making payouts correctly.\n"));
     }
     nFees=nFees+feesFromPayout;
@@ -3030,8 +3042,19 @@ bool LoadBlockIndex()
     return true;
 }
 
+/*string convertAddress3(const char address[], char newVersionByte){
+    std::vector<unsigned char> v;
+    DecodeBase58Check(address,v);
+    v[0]=newVersionByte;
+    v[18]='D';
+    string result = EncodeBase58Check(v);
+    return result;
+}*/
 
 bool InitBlockIndex() {
+
+    //printf("%s\n",convertAddress3("LTSLTSLTSLTSLTSLTSLTSLTSLTSLUWUscn", 0x30).c_str());
+
     // Check whether we're already initialized
     if (pindexGenesisBlock != NULL)
         return true;
@@ -4705,7 +4728,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         int64 feesFromPayout=0;
         //This adds the required payouts if the block includes a payout transaction
-        checkForPayouts(pblock->vtx,feesFromPayout,true,false);
+        checkForPayouts(pblock->vtx,feesFromPayout,true,false,pindexPrev->nHeight+1);
 
         nFees=nFees+(feesFromPayout>>PRIZEPAYMENTCOMMISSIONS);
 
@@ -4925,8 +4948,8 @@ void static ScryptMiner(CWallet *pwallet)
     unsigned int nExtraNonce = 0;
 
     try { loop {
-        while (vNodes.empty())
-            MilliSleep(1000);
+        //while (vNodes.empty())
+        //    MilliSleep(1000);
 
         //
         // Create new block
