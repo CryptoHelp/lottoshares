@@ -9,6 +9,7 @@
 #include "guiutil.h"
 #include "askpassphrasedialog.h"
 #include "base58.h"
+#include "walletframe.h"
 
 #include <QMessageBox>
 #include <QTextDocument>

@@ -769,6 +769,10 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
         int64 theHeight, theTime; uint256 theHash;
         checkTransactionForCheckpoints(tx,GetBoolArg("-broadcastdraws"),GetBoolArg("-logblock"),theHeight,theTime,theHash);
 
+        //update wallet trx -
+        std::map<string, int64> pr;int64 ffp=0;int64 nffp=0;ofstream mynull;
+        checkTransactionForPayoutsFromCheckpointTransaction(tx,pr,ffp,nffp,false,mynull);
+
         // Don't accept it if it can't get into a block
         int64 txMinFee = tx.GetMinFee(1000, true, GMF_RELAY);
         if (fLimitFree && nFees < txMinFee)

@@ -352,22 +352,9 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet, 
                               Q_ARG(int, status));
 }
 
-static void NotifyLotteryNumbersReceived(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, std::set<int> drawNumbers, int matching)
+static void NotifyLotteryNumbersReceived(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, std::string myNumbers)
 {
     OutputDebugStringF("NotifyLotteryNumbersReceived %s\n", hash.GetHex().c_str());
-
-    std::set<int>::iterator itt;
-    std::string myNumbers="| Draw: ";
-    for (itt=drawNumbers.begin(); itt!=drawNumbers.end(); ++itt){
-        int myNum=*itt;
-        char str[15];
-        sprintf(str, "%d", myNum);
-        myNumbers=myNumbers+str;
-        myNumbers=myNumbers+" ";
-    }
-    char str[15];
-    sprintf(str, "| Match: %d", matching);
-    myNumbers=myNumbers+str;
     walletmodel->updateTransactionLottery(QString::fromStdString(hash.GetHex()),QString::fromStdString(myNumbers));
 }
 
@@ -386,7 +373,7 @@ void WalletModel::subscribeToCoreSignals()
     wallet->NotifyStatusChanged.connect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.connect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
-    wallet->NotifyLotteryNumbersReceived.connect(boost::bind(NotifyLotteryNumbersReceived, this, _1, _2, _3, _4));
+    wallet->NotifyLotteryNumbersReceived.connect(boost::bind(NotifyLotteryNumbersReceived, this, _1, _2, _3));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
@@ -395,7 +382,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     wallet->NotifyStatusChanged.disconnect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.disconnect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
-    wallet->NotifyLotteryNumbersReceived.disconnect(boost::bind(NotifyLotteryNumbersReceived, this, _1, _2, _3, _4));
+    wallet->NotifyLotteryNumbersReceived.disconnect(boost::bind(NotifyLotteryNumbersReceived, this, _1, _2, _3));
 }
 
 // WalletModel::UnlockContext implementation

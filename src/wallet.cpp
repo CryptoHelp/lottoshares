@@ -504,14 +504,14 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 }
 
 
-bool CWallet::AddLotteryNumbersIfTransactionInvolvingMe(const uint256 &hash, const CTransaction& tx, std::set<int> drawNumbers, int matching)
+bool CWallet::AddLotteryNumbersIfTransactionInvolvingMe(const uint256 &hash, const CTransaction& tx, std::string myNumbers)
 {
     {
         LOCK(cs_wallet);
         bool fExisted = mapWallet.count(hash);
         if (fExisted){
             CWalletTx wtx(this,tx);
-            NotifyLotteryNumbersReceived(this, hash, drawNumbers, matching);
+            NotifyLotteryNumbersReceived(this, hash, myNumbers);
             return true;
         }
     }

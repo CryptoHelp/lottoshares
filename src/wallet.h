@@ -173,7 +173,7 @@ public:
 
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn);
-    bool AddLotteryNumbersIfTransactionInvolvingMe(const uint256 &hash, const CTransaction& tx, std::set<int> drawNumbers, int matching);
+    bool AddLotteryNumbersIfTransactionInvolvingMe(const uint256 &hash, const CTransaction& tx, std::string myNumbers);
     bool AddToWalletIfInvolvingMe(const uint256 &hash, const CTransaction& tx, const CBlock* pblock, bool fUpdate = false, bool fFindBlock = false);
     bool EraseFromWallet(uint256 hash);
     void WalletUpdateSpent(const CTransaction& prevout);
@@ -317,7 +317,7 @@ public:
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
 
-    boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, std::set<int> drawNumbers, int matching)> NotifyLotteryNumbersReceived;
+    boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, std::string myNumbers)> NotifyLotteryNumbersReceived;
 };
 
 /** A key allocated from the key pool. */

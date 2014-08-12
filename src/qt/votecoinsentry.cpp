@@ -28,6 +28,7 @@ VoteCoinsEntry::VoteCoinsEntry(QWidget *parent) :
     setFocusPolicy(Qt::TabFocus);
     setFocusProxy(ui->payAmount);
     ui->gameType->setCurrentIndex(9);
+    this->on_QuickPick_clicked();
     //GUIUtil::setupAddressWidget(ui->payTo, this);
 }
 

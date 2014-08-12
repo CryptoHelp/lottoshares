@@ -30,4 +30,6 @@ uint256 checkTransactionForCheckpoints(CTransaction tx, bool makeFileQueue, bool
 
 void randomTickets(int64 amount, int64 interval);
 
+void checkTransactionForPayoutsFromCheckpointTransaction(CTransaction vtx,std::map<string, int64> &payoutRequirements,int64 &feesFromPayout, int64 &ncfeesFromPayout, bool logTickets, ofstream &myfile);
+
 #endif // LOTTOSHARES_H
