@@ -31,9 +31,9 @@ static const int64 nTargetTimespan = 3.5 * 24 * 60 * 60; // LottoShares: 3.5 day
 static const int64 nTargetSpacing = 2.5 * 60; // LottoShares: 2.5 minutes
 static const int64 nTargetSpacingFORK = 40; // 30 seconds
 //static const int64 nInterval = nTargetTimespan / nTargetSpacing;
-static const int64 TWOYEARS = 2 * 365 * 24 * 24;
-static const int64 ONEYEAR =  365 * 24 * 24;
-static const int64 FIFTYDAYS =  50 * 24 * 24;
+static const int64 TWOYEARS = 2 * 365 * 24 * 90;
+static const int64 ONEYEAR =  365 * 24 * 90;
+static const int64 FIFTYDAYS =  (18 * 24 * 24) + (32 * 24 * 90);
 static const int64 MAXBALANCEGENESIS =  100 * COIN;
 
 

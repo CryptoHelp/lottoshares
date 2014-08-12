@@ -1508,27 +1508,27 @@
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 896          (87.5% win X1.20)</string>
+         <string notr="true">Roll 1 to 896          (87.5% win X1.14)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 960          (93.75% win X1.11)</string>
+         <string notr="true">Roll 1 to 960          (93.75% win X1.067)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 992          (96.87% win X1.06)</string>
+         <string notr="true">Roll 1 to 992          (96.87% win X1.032)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 1008        (98.44% win X1.03)</string>
+         <string notr="true">Roll 1 to 1008        (98.44% win X1.016)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 1016        (99.22% win X 1.015)</string>
+         <string notr="true">Roll 1 to 1016        (99.22% win X 1.008)</string>
         </property>
        </item>
        <item>
