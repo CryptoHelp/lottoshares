@@ -214,7 +214,8 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
                         }
                     }else if(gameNumber>10 && gameNumber<20){
                         int threshold=1025-(pow(2,(gameNumber-19)*-1));
-                        int64 winAmount=stake+(stake>>(gameNumber-10));
+                        //int64 winAmount=stake+(stake>>(gameNumber-10));
+                        int64 winAmount=stake+(stake/(pow(2,(gameNumber-10))+1));
                         printf("Test Less Than: %d for prize %llu\n",threshold,winAmount);
                         if(diceRoll<threshold){
                             prize=winAmount;

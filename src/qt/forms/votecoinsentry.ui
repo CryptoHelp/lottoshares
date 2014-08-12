@@ -38,7 +38,7 @@
    <item row="3" column="0">
     <widget class="QTabWidget" name="gamePanel">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -1503,32 +1503,32 @@
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 768          (75% win X1.5)</string>
+         <string notr="true">Roll 1 to 768          (75% win X1.33)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 896          (87.5% win X1.25)</string>
+         <string notr="true">Roll 1 to 896          (87.5% win X1.20)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 960          (93.75% win X1.125)</string>
+         <string notr="true">Roll 1 to 960          (93.75% win X1.11)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 992          (96.875% win X1.0625)</string>
+         <string notr="true">Roll 1 to 992          (96.87% win X1.06)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 1008        (98.4375% win X1.03125)</string>
+         <string notr="true">Roll 1 to 1008        (98.44% win X1.03)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 1016        (99.21875% win X 1.015625)</string>
+         <string notr="true">Roll 1 to 1016        (99.22% win X 1.015)</string>
         </property>
        </item>
        <item>
