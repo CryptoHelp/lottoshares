@@ -35,8 +35,8 @@ string DRAWMANAGERBROADCASTADDRESS  ="LTSLTSKuQ35qr4mmz5aUBU1bm4v3Q8DJby";
 string TICKETADDRESS                ="LTSLTSLTSLTSLTSLTSLTSLTSLTSLUWUscn";
 string DICEADDRESS                  ="LTSLTSLTSLTSLTSLTSLTSLTSFJWz2ixwtN";
 
-char mPUBKey[]="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1blo14f8xTPJUlfo0YVy\nLcixUMVfbbtoa6QCdLOaW27rlnm4zOjuFXCpFpUw3I8GvVkvqLev0Y5wE4SySUZ8\n4q3Y4YQv/7QPl9GK3jGw99c9NHnTR01xaSqymYfocgxH0OEQ2NS15E9hS6pPkRQT\nlm0k4sYr3sKHBKe+DPKBACo7az6QvpXwncFiUW7yGEZPwhzcbVAQo8E6609B00nB\nfkBrzYc6u5/IcbRV+gygYbN0EjiV9AHQtMSzkMHsA3X0T5IGRZPWOtfnfmpxzaiO\nWWXJ6nfABZXE4fqnfBcISdo2Hp701t86FnSRuuIpFGFrfKueQwEaeJps9RFyAMhA\nuwIDAQAB\n-----END PUBLIC KEY-----";
-string TIMEKEEPERRSABROADCASTADDRESS     ="LRSAKerUAXYS7nk5cwcCbDMrgp1nsFn5ik";
+char* mPUBKey="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1blo14f8xTPJUlfo0YVy\nLcixUMVfbbtoa6QCdLOaW27rlnm4zOjuFXCpFpUw3I8GvVkvqLev0Y5wE4SySUZ8\n4q3Y4YQv/7QPl9GK3jGw99c9NHnTR01xaSqymYfocgxH0OEQ2NS15E9hS6pPkRQT\nlm0k4sYr3sKHBKe+DPKBACo7az6QvpXwncFiUW7yGEZPwhzcbVAQo8E6609B00nB\nfkBrzYc6u5/IcbRV+gygYbN0EjiV9AHQtMSzkMHsA3X0T5IGRZPWOtfnfmpxzaiO\nWWXJ6nfABZXE4fqnfBcISdo2Hp701t86FnSRuuIpFGFrfKueQwEaeJps9RFyAMhA\nuwIDAQAB\n-----END PUBLIC KEY-----";
+string TIMEKEEPERRSABROADCASTADDRESS ="LRSAKerUAXYS7nk5cwcCbDMrgp1nsFn5ik";
 
 lottoshares::lottoshares()
 {
@@ -204,7 +204,7 @@ int countMatches(std::set<int> ticketNumbers, std::set<int> drawNumbers){
     return count;
 }
 
-void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, int64 &feesFromPayout, uint256 theTicketBlockHash, std::set<int> drawNumbers, bool logTickets, uint256 seedHash){
+void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, int64 &feesFromPayout, int64 &ncfeesFromPayout, uint256 theTicketBlockHash, std::set<int> drawNumbers, bool logTickets, uint256 seedHash){
 
     ofstream myfile;
     if(logTickets){
@@ -340,6 +340,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
                         std::string payoutAddress=CBitcoinAddress(address).ToString().c_str();
                         printf("Payout Address %s\n",payoutAddress.c_str());
                         payoutRequirements[payoutAddress]=payoutRequirements[payoutAddress]+prize;
+                        feesFromPayout=feesFromPayout+prize;
                         totalPrizes+=prize;
                         /*if(logTickets && drawNumbers.size()==6){
                             myfile << "Matching Numbers: " << matchingNumber << " Prize:" << prize <<"\n";
@@ -485,7 +486,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
     }
 }
 
-void checkTransactionForPayoutsFromDrawTransaction(CTransaction vtx,std::map<string, int64> &payoutRequirements,int64 &feesFromPayout, bool logTickets, ofstream &myfile){
+void checkTransactionForPayoutsFromDrawTransaction(CTransaction vtx,std::map<string, int64> &payoutRequirements,int64 &feesFromPayout,int64 &ncfeesFromPayout, bool logTickets, ofstream &myfile){
     if(vtx.vout.size()==9 &&
         vtx.vout[0].nValue==1 &&
         vtx.vout[1].nValue==1 &&
@@ -565,14 +566,14 @@ void checkTransactionForPayoutsFromDrawTransaction(CTransaction vtx,std::map<str
                     myfile << "Random Seed String:" << randSeedString << "\n";
                 }
                 //Note - the block may contain multiple draw results
-                calculatePayoutRequirements(payoutRequirements,feesFromPayout,theHashNew,drawNumbers,logTickets,seedHash);
+                calculatePayoutRequirements(payoutRequirements,feesFromPayout,ncfeesFromPayout,theHashNew,drawNumbers,logTickets,seedHash);
 
             }
         }
     }
 }
 
-void checkTransactionForPayoutsFromCheckpointTransaction(CTransaction vtx,std::map<string, int64> &payoutRequirements,int64 &feesFromPayout, bool logTickets, ofstream &myfile){
+void checkTransactionForPayoutsFromCheckpointTransaction(CTransaction vtx,std::map<string, int64> &payoutRequirements,int64 &feesFromPayout, int64 &ncfeesFromPayout, bool logTickets, ofstream &myfile){
 
     int64 theHeight;
     int64 theTime;
@@ -599,11 +600,11 @@ void checkTransactionForPayoutsFromCheckpointTransaction(CTransaction vtx,std::m
             myfile << "Random Seed String:" << seedHash.GetHex() << "\n";
         }
         //Note - the block may contain multiple draw results
-        calculatePayoutRequirements(payoutRequirements,feesFromPayout,theHashNew,drawNumbers,logTickets,seedHash);
+        calculatePayoutRequirements(payoutRequirements,feesFromPayout,ncfeesFromPayout,theHashNew,drawNumbers,logTickets,seedHash);
     }
 }
 
-bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool addTransactions, bool logTickets, int blockHeight){
+bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, int64 &ncfeesFromPayout, bool addTransactions, bool logTickets, int blockHeight){
 
     ofstream myfile;
     if(logTickets){
@@ -619,9 +620,9 @@ bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool
             //This is a coinbase transaction, it can't be a draw result, skip
         }else{
             if(blockHeight<FORKHEIGHT){
-                checkTransactionForPayoutsFromDrawTransaction(vtx[i],payoutRequirements,feesFromPayout,logTickets,myfile);
+                checkTransactionForPayoutsFromDrawTransaction(vtx[i],payoutRequirements,feesFromPayout,ncfeesFromPayout,logTickets,myfile);
             }else{
-                checkTransactionForPayoutsFromCheckpointTransaction(vtx[i],payoutRequirements,feesFromPayout,logTickets,myfile);
+                checkTransactionForPayoutsFromCheckpointTransaction(vtx[i],payoutRequirements,feesFromPayout,ncfeesFromPayout,logTickets,myfile);
             }
         }
     }
@@ -714,8 +715,8 @@ void writeLogInfoForBlock(uint256 logBlockHash){
 
     //Valid tickets
     //Tickets played
-    int64 notNeeded=0;
-    calculatePayoutRequirements(logPayouts,notNeeded,logBlockHash, emptyNumberSet, true,0);
+    int64 notNeeded=0;int64 notNeeded2=0;
+    calculatePayoutRequirements(logPayouts,notNeeded,notNeeded2,logBlockHash, emptyNumberSet, true,0);
 
 
 
@@ -732,8 +733,8 @@ void writeLogInfoForBlock(uint256 logBlockHash){
     int64 subsidyAllowed = GetBlockValue(ticketBlockHeader->nHeight, thefees, ticketBlockHeader->pprev->nBits);
 
     //Draws found
-    int64 feesFromPayout=0;
-    checkForPayouts(ticketBlock.vtx, feesFromPayout, false, true,ticketBlockHeader->nHeight);
+    int64 feesFromPayout=0;int64 ncfeesFromPayout=0;
+    checkForPayouts(ticketBlock.vtx, feesFromPayout,ncfeesFromPayout, false, true,ticketBlockHeader->nHeight);
 
     //Prizes awarded
 

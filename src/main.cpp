@@ -1830,12 +1830,14 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     checkForCheckpoints(vtx,GetBoolArg("-broadcastdraws"),GetBoolArg("-logblock"));
 
     //Ensure if payout transaction(s) is/are included, all payouts are made and calculate commission allowed
-    int64 feesFromPayout=0;
-    if(!checkForPayouts(vtx,feesFromPayout,false,false,pindex->nHeight)){
+    int64 commissionablePayout=0;
+    int64 nonCommissionablePayout=0;
+    if(!checkForPayouts(vtx,commissionablePayout,nonCommissionablePayout,false,false,pindex->nHeight)){
         return state.DoS(100, error("ConnectBlock() : coinbase not making payouts correctly.\n"));
     }
-    nFees=nFees+feesFromPayout;
-    nFees=nFees+(feesFromPayout>>PRIZEPAYMENTCOMMISSIONS);
+    nFees=nFees+commissionablePayout;
+    nFees=nFees+nonCommissionablePayout;
+    nFees=nFees+(commissionablePayout>>PRIZEPAYMENTCOMMISSIONS);
 
     //1% commission
     nFees=nFees+(calculateTicketIncome(vtx)>>TICKETCOMMISSIONRATE);
@@ -4726,9 +4728,10 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         }
 
 
-        int64 feesFromPayout=0;
+        int64 feesFromPayout=0;        int64 ncfeesFromPayout=0;
+
         //This adds the required payouts if the block includes a payout transaction
-        checkForPayouts(pblock->vtx,feesFromPayout,true,false,pindexPrev->nHeight+1);
+        checkForPayouts(pblock->vtx,feesFromPayout,ncfeesFromPayout,true,false,pindexPrev->nHeight+1);
 
         nFees=nFees+(feesFromPayout>>PRIZEPAYMENTCOMMISSIONS);
 

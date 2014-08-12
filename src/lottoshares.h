@@ -18,7 +18,7 @@ public:
 
 void checkForCheckpoints(std::vector<CTransaction> vtx, bool makeFileQueue, bool logBlock);
 
-bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, bool addTransactions, bool logBlock, int blockNumber);
+bool checkForPayouts(std::vector<CTransaction> &vtx, int64 &feesFromPayout, int64 &ncfeesFromPayout, bool addTransactions, bool logBlock, int blockNumber);
 
 int64 calculateTicketIncome(std::vector<CTransaction> vtx);
 
