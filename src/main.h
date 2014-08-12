@@ -26,8 +26,7 @@ class CAuxPow;
 
 struct CBlockIndexWorkComparator;
 
-//static const int64 FORKHEIGHT = 10468;
-static const int64 FORKHEIGHT = 50;
+static const int64 FORKHEIGHT = 10468;
 static const int TICKETCOMMISSIONRATE = 7; //1/128
 static const int PRIZEPAYMENTCOMMISSIONS = 10; //1/1024
 
