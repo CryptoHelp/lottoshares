@@ -38,7 +38,7 @@
    <item row="3" column="0">
     <widget class="QTabWidget" name="gamePanel">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -1414,7 +1414,7 @@
       <widget class="QWidget" name="layoutWidget">
        <property name="geometry">
         <rect>
-         <x>160</x>
+         <x>310</x>
          <y>10</y>
          <width>381</width>
          <height>22</height>
@@ -1441,7 +1441,7 @@
         <rect>
          <x>10</x>
          <y>10</y>
-         <width>141</width>
+         <width>291</width>
          <height>20</height>
         </rect>
        </property>
@@ -1453,107 +1453,107 @@
        </property>
        <item>
         <property name="text">
-         <string notr="true">Roll 1</string>
+         <string notr="true">Roll 1                      (Snowball X1024)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 or 2</string>
+         <string notr="true">Roll 1 or 2              (SFA chance of X512)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 4</string>
+         <string notr="true">Roll 1 to 4              (Slim chance of X256)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 8</string>
+         <string notr="true">Roll 1 to 8              (.78125% win X128)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 16</string>
+         <string notr="true">Roll 1 to 16            (1.5625% win X64)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 32</string>
+         <string notr="true">Roll 1 to 32            (3.125% win X32)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 64</string>
+         <string notr="true">Roll 1 to 64            (6.25% win X16)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 128</string>
+         <string notr="true">Roll 1 to 128          (12.5% win X8)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 256</string>
+         <string notr="true">Roll 1 to 256          (25% win X4)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 512</string>
+         <string notr="true">Roll 1 to 512          (50% win X2)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 768</string>
+         <string notr="true">Roll 1 to 768          (75% win X1.5)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 896</string>
+         <string notr="true">Roll 1 to 896          (87.5% win X1.25)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 960</string>
+         <string notr="true">Roll 1 to 960          (93.75% win X1.125)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 992</string>
+         <string notr="true">Roll 1 to 992          (96.875% win X1.0625)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 1008</string>
+         <string notr="true">Roll 1 to 1008        (98.4375% win X1.03125)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 1016</string>
+         <string notr="true">Roll 1 to 1016        (99.21875% win X 1.015625)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 1020</string>
+         <string notr="true">Roll 1 to 1020        (Guarantee)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 1022</string>
+         <string notr="true">Roll 1 to 1022        (Dead Cert)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll 1 to 1023</string>
+         <string notr="true">Roll 1 to 1023        (Everytime)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll Odd Number</string>
+         <string notr="true">Roll Odd                (50% win X2)</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string notr="true">Roll Even Number</string>
+         <string notr="true">Roll Even               (50% win X2)</string>
         </property>
        </item>
       </widget>

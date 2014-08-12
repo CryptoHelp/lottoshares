@@ -29,6 +29,9 @@ VoteCoinsEntry::VoteCoinsEntry(QWidget *parent) :
     setFocusProxy(ui->payAmount);
     ui->gameType->setCurrentIndex(9);
     this->on_QuickPick_clicked();
+    ui->payAmount->setValue(1000000000);
+    ui->payAmount_2->setValue(1000000000);
+
     //GUIUtil::setupAddressWidget(ui->payTo, this);
 }
 
