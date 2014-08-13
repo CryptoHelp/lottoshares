@@ -192,7 +192,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
 
                 printf("Dice Trx ID: %s\n",ticketBlock.vtx[i].GetHash().GetHex().c_str());
 
-                int64 gameNumber=ticketBlock.vtx[i].vout[0].nValue;
+                int gameNumber=ticketBlock.vtx[i].vout[0].nValue;
                 printf("Game: %llu\n",gameNumber);
 
 
@@ -206,16 +206,16 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
 
                     int64 prize=0;
                     if(gameNumber>0 && gameNumber<11){
-                        int threshold=(pow(2,gameNumber-1))+1;
-                        int64 winAmount=stake*(pow(2,11-gameNumber));
+                        int threshold=(pow(2.0,gameNumber-1))+1;
+                        int64 winAmount=stake*(pow(2.0,11-gameNumber));
                         printf("Test Less Than: %d for prize %llu\n",threshold,winAmount);
                         if(diceRoll<threshold){
                             prize=winAmount;
                         }
                     }else if(gameNumber>10 && gameNumber<20){
-                        int threshold=1025-(pow(2,(gameNumber-19)*-1));
+                        int threshold=1025-(pow(2.0,(gameNumber-19)*-1));
                         //int64 winAmount=stake+(stake>>(gameNumber-10));
-                        int64 winAmount=stake+(stake/(pow(2,(gameNumber-9))-1));
+                        int64 winAmount=stake+(stake/(pow(2.0,(gameNumber-9))-1));
                         printf("Test Less Than: %d for prize %llu\n",threshold,winAmount);
                         if(diceRoll<threshold){
                             prize=winAmount;
