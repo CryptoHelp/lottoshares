@@ -110,6 +110,17 @@ int countMatches(std::set<int> ticketNumbers, std::set<int> drawNumbers){
     return count;
 }
 
+int powerPositiveIntegers (int number, int index) {
+    if (index == 0) {
+        return 1;
+    }
+    int num = number;
+    for (int i = 1; i < index; i++) {
+        number = number * num;
+    }
+    return number;
+}
+
 void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, int64 &feesFromPayout, int64 &ncfeesFromPayout, uint256 theTicketBlockHash, std::set<int> drawNumbers, bool logTickets, uint256 seedHash){
 
     ofstream myfile;
@@ -192,9 +203,12 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
 
                 printf("Dice Trx ID: %s\n",ticketBlock.vtx[i].GetHash().GetHex().c_str());
 
-                int gameNumber=ticketBlock.vtx[i].vout[0].nValue;
-                printf("Game: %llu\n",gameNumber);
-
+                int64 gameNumber64=ticketBlock.vtx[i].vout[0].nValue;
+                printf("Game: %llu\n",gameNumber64);
+                if(gameNumber64>21){
+                    continue;
+                }
+                int gameNumber=gameNumber64;
 
                 int diceRoll=getDiceRoll(ticketBlock.vtx[i].GetHash(),seedHash);
                 printf("Roll: %d\n",diceRoll);
@@ -206,16 +220,16 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
 
                     int64 prize=0;
                     if(gameNumber>0 && gameNumber<11){
-                        int threshold=(pow(2.0,gameNumber-1))+1;
-                        int64 winAmount=stake*(pow(2.0,11-gameNumber));
+                        int threshold=(powerPositiveIntegers(2,gameNumber-1))+1;
+                        int64 winAmount=stake*(powerPositiveIntegers(2,11-gameNumber));
                         printf("Test Less Than: %d for prize %llu\n",threshold,winAmount);
                         if(diceRoll<threshold){
                             prize=winAmount;
                         }
                     }else if(gameNumber>10 && gameNumber<20){
-                        int threshold=1025-(pow(2.0,(gameNumber-19)*-1));
+                        int threshold=1025-(powerPositiveIntegers(2,(gameNumber-19)*-1));
                         //int64 winAmount=stake+(stake>>(gameNumber-10));
-                        int64 winAmount=stake+(stake/(pow(2.0,(gameNumber-9))-1));
+                        int64 winAmount=stake+(stake/(powerPositiveIntegers(2,(gameNumber-9))-1));
                         printf("Test Less Than: %d for prize %llu\n",threshold,winAmount);
                         if(diceRoll<threshold){
                             prize=winAmount;
