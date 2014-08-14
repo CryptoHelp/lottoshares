@@ -132,7 +132,6 @@ Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall LottoShares.lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\LottoShares.lnk"
-    Delete /REBOOTOK "$SMSTARTUP\Litecoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
     Delete /REBOOTOK $INSTDIR\db.log
