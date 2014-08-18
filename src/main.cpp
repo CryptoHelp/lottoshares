@@ -1847,6 +1847,9 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     nFees=nFees+nonCommissionablePayout;
     nFees=nFees+(commissionablePayout>>PRIZEPAYMENTCOMMISSIONS);
 
+    //Note this should be removed once checkpointed blocks stop accepting blocks with nc payouts
+    nFees=nFees+(nonCommissionablePayout>>PRIZEPAYMENTCOMMISSIONS);
+
     //1% commission
     nFees=nFees+(calculateTicketIncome(vtx)>>TICKETCOMMISSIONRATE);
 

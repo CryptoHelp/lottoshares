@@ -269,7 +269,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
                         std::string payoutAddress=CBitcoinAddress(address).ToString().c_str();
                         printf("Payout Address %s\n",payoutAddress.c_str());
                         payoutRequirements[payoutAddress]=payoutRequirements[payoutAddress]+prize;
-                        feesFromPayout=feesFromPayout+prize;
+                        ncfeesFromPayout=ncfeesFromPayout+prize;
                         totalPrizes+=prize;
                         /*if(logTickets && drawNumbers.size()==6){
                             myfile << "Matching Numbers: " << matchingNumber << " Prize:" << prize <<"\n";
