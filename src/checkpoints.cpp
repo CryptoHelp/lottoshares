@@ -204,7 +204,7 @@ namespace Checkpoints
                 std::getline (myfile2,line);
                 std::vector<std::string> strs;
                 boost::split(strs, line, boost::is_any_of(","));
-                if(strs.size()==3){
+                if(strs.size()==3 || strs.size()==4){
                     mapCheckpoints[atoi(strs[0])]=uint256(strs[1]);
                 }else{
                     printf("checkpoints.txt - %s line parse failed\n",line.c_str());
