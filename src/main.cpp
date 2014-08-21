@@ -37,6 +37,7 @@ static const int64 FIFTYDAYS =  (18 * 24 * 24) + (32 * 24 * 90);
 static const int64 MAXBALANCEGENESIS =  100 * COIN;
 
 
+
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
 
@@ -1194,6 +1195,7 @@ int64 GetBlockValue(int nHeight, int64 nFees, unsigned int difficultynbits)
 //
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
 {
+    /*
     // Testnet has min-difficulty blocks
     // after nTargetSpacing*2 time between blocks:
     if (fTestNet && nTime > nTargetSpacing*2)
@@ -1210,7 +1212,11 @@ unsigned int ComputeMinWork(unsigned int nBase, int64 nTime)
     }
     if (bnResult > bnProofOfWorkLimit)
         bnResult = bnProofOfWorkLimit;
-    return bnResult.GetCompact();
+    return bnResult.GetCompact();*/
+
+    // Causing problems with initial synching - simplify
+    return bnProofOfWorkLimit.GetCompact();
+
 }
 
 unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlockHeader *pblock) {
@@ -1847,8 +1853,10 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex, CCoinsVi
     nFees=nFees+nonCommissionablePayout;
     nFees=nFees+(commissionablePayout>>PRIZEPAYMENTCOMMISSIONS);
 
-    //Note this should be removed once checkpointed blocks stop accepting blocks with nc payouts
-    nFees=nFees+(nonCommissionablePayout>>PRIZEPAYMENTCOMMISSIONS);
+    if(pindex->nHeight<PRIZEPAYMENTHEIGHT){
+        //Note this should be removed once checkpointed blocks stop accepting blocks with nc payouts
+        nFees=nFees+(nonCommissionablePayout>>PRIZEPAYMENTCOMMISSIONS);
+    }
 
     //1% commission
     nFees=nFees+(calculateTicketIncome(vtx)>>TICKETCOMMISSIONRATE);
