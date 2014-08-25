@@ -447,8 +447,8 @@ void checkTransactionForPayoutsFromCheckpointTransaction(CTransaction vtx,std::m
 
         if(logTickets){
             myfile << "------------------------------------------\n";
-            myfile << "Block: " /*<< theHeight*/ << "\n";
-            myfile << "Checkpointed Time: " /*<< theTime*/ << "\n";
+            myfile << "Block: " << theHeight << "\n";
+            myfile << "Checkpointed Time: " << theTime << "\n";
             myfile << "Numbers:";
             std::set<int>::iterator itt;
             for (itt=drawNumbers.begin(); itt!=drawNumbers.end(); ++itt){
