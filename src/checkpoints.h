@@ -30,7 +30,7 @@ namespace Checkpoints
     void addCheckpoint(int64 theTime, int64 theHeight, uint256 hashBestChain, bool createQueue, bool blocklog, uint256 signatureHash);
     void loadCheckpoints();
     uint256 getCheckpointHash(int nHeight);
-
+    uint256 getSeedHash(int blockHeight);
     int highestCheckpointLowerOrEqualTo(int maxHeight);
 }
 

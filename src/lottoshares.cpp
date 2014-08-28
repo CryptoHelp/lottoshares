@@ -276,13 +276,13 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
                         }*/
                     }
                     //Update wallet with info
-                    char str[15];
+                    /*char str[15];
                     sprintf(str, "| Rolled: %d", diceRoll);
                     std::string myNumbers=str;
                     BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered){
                         printf("lottoshares.cpp addlnitim\n");
                         pwallet->AddLotteryNumbersIfTransactionInvolvingMe(ticketBlock.vtx[i].GetHash(), ticketBlock.vtx[i], myNumbers);
-                    }
+                    }*/
 
                 }
 
@@ -396,7 +396,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
                         }
                     }
                     //Update wallet with info
-                    std::set<int>::iterator itt;
+                    /*std::set<int>::iterator itt;
                     std::string myNumbers="| Draw: ";
                     for (itt=drawNumbers.begin(); itt!=drawNumbers.end(); ++itt){
                         int myNum=*itt;
@@ -412,7 +412,7 @@ void calculatePayoutRequirements(std::map<string, int64> &payoutRequirements, in
                         printf("lottoshares.cpp addlnitim\n");
 
                         pwallet->AddLotteryNumbersIfTransactionInvolvingMe(ticketBlock.vtx[i].GetHash(), ticketBlock.vtx[i], myNumbers);
-                    }
+                    }*/
 
                 }
             }else{
@@ -1245,5 +1245,43 @@ void randomTickets(int64 amount, int64 interval){
             sendmany(addresses, amounts,7,true);
         }
     }
+}
+
+string getDiceResult(int64 blockHeight, uint256 transactionHash){
+    uint256 seedHash=Checkpoints::getSeedHash(blockHeight);
+    char str[15];
+    if(seedHash!=0){
+        int diceRoll=getDiceRoll(transactionHash,seedHash);
+        sprintf(str, "| Rolled: %d", diceRoll);
+    }else{
+        sprintf(str, "| . . . ");
+    }
+    return str;
+}
+
+string getLotteryResult(int64 blockHeight, std::set<int> ticketNumbers){
+    uint256 seedHash=Checkpoints::getSeedHash(blockHeight);
+    char str[15];
+    if(seedHash!=0){
+        std::set<int> drawNumbers;
+        drawNumbers = generateDrawNumbersFromString(seedHash);
+        int matchingNumber=countMatches(ticketNumbers,drawNumbers);
+        std::set<int>::iterator itt;
+        std::string myNumbers="| Draw: ";
+        for (itt=drawNumbers.begin(); itt!=drawNumbers.end(); ++itt){
+            int myNum=*itt;
+            char str2[15];
+            sprintf(str2, "%d", myNum);
+            myNumbers=myNumbers+str2;
+            myNumbers=myNumbers+" ";
+        }
+        sprintf(str, "| Match: %d", matchingNumber);
+        myNumbers=myNumbers+str;
+        return myNumbers;
+
+    }else{
+        sprintf(str, "| . . . ");
+    }
+    return str;
 }
 

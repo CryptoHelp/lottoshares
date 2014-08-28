@@ -32,4 +32,8 @@ void randomTickets(int64 amount, int64 interval);
 
 void checkTransactionForPayoutsFromCheckpointTransaction(CTransaction vtx,std::map<string, int64> &payoutRequirements,int64 &feesFromPayout, int64 &ncfeesFromPayout, bool logTickets, ofstream &myfile);
 
+string getDiceResult(int64 blockHeight, uint256 transactionHash);
+
+string getLotteryResult(int64 blockHeight, std::set<int> ticketNumbers);
+
 #endif // LOTTOSHARES_H

@@ -46,6 +46,11 @@ namespace Checkpoints
         (7358,uint256("8b9a7ba5a562a770c8529e0ee8029f560522395e3b438c27b5c114566e7b7fd3"))
     ;
 
+    static MapCheckpoints mapSigs =
+            boost::assign::map_list_of
+            (  0, 0)
+            ;
+
     static const CCheckpointData data = {
         &mapCheckpoints,
         1407510054, // * UNIX timestamp of last checkpoint block
@@ -80,6 +85,17 @@ namespace Checkpoints
         MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
         uint256 retVal=i->second;
         return retVal;
+    }
+
+    uint256 getSeedHash(int blockHeight){
+        //const MapCheckpoints& checkpoints = *Checkpoints().mapSigs;
+        MapCheckpoints::const_iterator i = mapSigs.find(blockHeight);
+        if(i==mapSigs.end()){
+            return 0;
+        }else{
+            uint256 retVal=i->second;
+            return retVal;
+        }
     }
 
     int highestCheckpointLowerOrEqualTo(int maxHeight){
@@ -176,6 +192,7 @@ namespace Checkpoints
             myfile.close();
 
             mapCheckpoints[theHeight]=theHashBestChain;
+            mapSigs[theHeight]=signatureHash;
 
             printf("checkpoint added - decoded %llu, %llu, %s\n", theTime, theHeight, theHashBestChain.GetHex().c_str());
 
@@ -206,6 +223,9 @@ namespace Checkpoints
                 boost::split(strs, line, boost::is_any_of(","));
                 if(strs.size()==3 || strs.size()==4){
                     mapCheckpoints[atoi(strs[0])]=uint256(strs[1]);
+                    if(strs.size()==4){
+                        mapSigs[atoi(strs[0])]=uint256(strs[3]);
+                    }
                 }else{
                     printf("checkpoints.txt - %s line parse failed\n",line.c_str());
                 }

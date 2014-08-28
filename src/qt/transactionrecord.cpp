@@ -3,6 +3,8 @@
 #include "wallet.h"
 #include "base58.h"
 
+#include "lottoshares.h"
+
 /* Return positive answer if transaction should be shown in list.
  */
 bool TransactionRecord::showTransaction(const CWalletTx &wtx)
@@ -300,17 +302,20 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         int64 totalValue = 0;
         int64 lotteryNumbers[8]={0};
         int theSize=wtx.vout.size()-1;
+        std::set<int> numbersPlayed;
         for (unsigned int nOut = 0; nOut < theSize; nOut++)
         {
             const CTxOut& txout = wtx.vout[nOut];
             lotteryNumbers[nOut]=txout.nValue;
+            numbersPlayed.insert(txout.nValue);
             totalValue+=txout.nValue;
         }
 
         char nums[100];
         int blocknumber=wtx.GetHeightInMainChain();
         if(blocknumber!=-1){
-            snprintf(nums, 100, "Played: %llu %llu %llu %llu %llu %llu | Block:%d %s", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5],blocknumber, this->lotteryResult.c_str());
+            string lotteryResultText=getLotteryResult(blocknumber,numbersPlayed);
+            snprintf(nums, 100, "Played: %llu %llu %llu %llu %llu %llu | Block:%d %s %s", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5],blocknumber, this->lotteryResult.c_str(), lotteryResultText.c_str());
         }else{
             snprintf(nums, 100, "Played: %llu %llu %llu %llu %llu %llu | Waiting For Block", lotteryNumbers[0],lotteryNumbers[1],lotteryNumbers[2],lotteryNumbers[3],lotteryNumbers[4],lotteryNumbers[5]);
         }
@@ -398,9 +403,10 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
             break;
         }
 
+        string diceResultText=getDiceResult(blocknumber,wtx.GetHash());
 
         if(blocknumber!=-1){
-            snprintf(nums, 100, "Dice Game: %s | Block:%d %s", gameType.c_str(),blocknumber, this->lotteryResult.c_str());
+            snprintf(nums, 100, "Dice Game: %s | Block:%d %s %s", gameType.c_str(),blocknumber, this->lotteryResult.c_str(), diceResultText.c_str());
         }else{
             snprintf(nums, 100, "Dice Game: %s | Waiting For Block", gameType.c_str());
         }
